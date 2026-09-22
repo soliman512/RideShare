@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/extension/app_extensions.dart';
 
 import '../../widgets/default_body.dart';
 
@@ -20,17 +18,18 @@ class RiderHomeScreen extends StatelessWidget {
           children: [
             RichText(
               text: TextSpan(
-                style: GoogleFonts.outfit(
-                  color: AppConstColors.primaryBlack,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontSize: 18,
+                  color: AppConstColors.primaryBlack,
                 ),
                 children: [
                   const TextSpan(text: "Good Morning, "),
                   TextSpan(
                     text: "soliman",
-                    style: GoogleFonts.outfit(
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                       color: AppConstColors.orange,
-                      fontWeight: .w600,
                     ),
                   ),
                 ],
@@ -39,18 +38,16 @@ class RiderHomeScreen extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               "Where are you going?",
-              style: GoogleFonts.outfit(
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 fontSize: 26,
                 color: AppConstColors.primaryBlack,
-                fontWeight: .w600,
+                fontWeight: FontWeight.w600,
               ),
             ),
             Text(
               "Find a ride to your destination.",
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                color: const Color.fromARGB(255, 156, 156, 156),
-              ),
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: Colors.grey),
             ),
             SizedBox(height: 40),
             //search field
@@ -62,10 +59,8 @@ class RiderHomeScreen extends StatelessWidget {
               // onChanged: onChange,
               // obscureText: obscureText,
               cursorColor: AppConstColors.secondary,
-              style: GoogleFonts.outfit(
-                color: AppConstColors.primaryBlack,
-                fontSize: 16,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: AppConstColors.primaryBlack),
               textAlign: .center,
               decoration: InputDecoration(
                 hintText: "ex. New Cairo",
@@ -88,18 +83,16 @@ class RiderHomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                hintStyle: GoogleFonts.outfit(
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: const Color.fromARGB(255, 143, 143, 143),
-                  fontWeight: .w300,
-                  fontSize: 14,
+                  fontWeight: FontWeight.w300,
                 ),
 
                 floatingLabelAlignment: .center,
                 floatingLabelBehavior: .always,
-                labelStyle: GoogleFonts.outfit(
+                labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppConstColors.orange,
-                  fontWeight: .w300,
-                  fontSize: 18,
+                  fontWeight: FontWeight.w300,
                 ),
                 filled: true,
                 fillColor: const Color.fromARGB(255, 250, 250, 250),

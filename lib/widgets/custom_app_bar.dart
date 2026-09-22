@@ -24,7 +24,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
     return AppBar(
       elevation: 0,
       toolbarHeight: 80,
+      // Prevent color change when scrolling
+      scrolledUnderElevation: 0,
 
+      // Remove Material 3 surface tint
+      surfaceTintColor: Colors.transparent,
+
+      // Optional: Keep AppBar transparent
+      shadowColor: Colors.transparent,
       backgroundColor: Colors.transparent,
       foregroundColor: AppConstColors.secondary,
       // leading: Image.asset(AppConstImages.appLogo, width: 6),
@@ -119,7 +126,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
             crossAxisAlignment: .center,
             mainAxisAlignment: .spaceBetween,
             children: [
-              Text("Become as a"),
+              Text(
+                "Become as a",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               Container(
                 width: 160,
                 height: 30,
@@ -160,17 +170,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
                               //   isDriver = false;
                               // });
                             }
-                            print(isDriver);
                           },
                           child: Text(
-                            "rider",
+                            "Rider",
                             textAlign: .center,
-                            style: GoogleFonts.outfit(
-                              color: isDriver
-                                  ? AppConstColors.orange
-                                  : AppConstColors.white,
-                              fontSize: 14,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: isDriver
+                                      ? AppConstColors.orange
+                                      : AppConstColors.white,
+                                ),
                           ),
                         ),
                         GestureDetector(
@@ -183,17 +192,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
                               //   isDriver = true;
                               // });
                             }
-                            print(isDriver);
                           },
                           child: Text(
-                            "driver",
+                            "Driver",
                             textAlign: .center,
-                            style: GoogleFonts.outfit(
-                              color: isDriver
-                                  ? AppConstColors.white
-                                  : AppConstColors.orange,
-                              fontSize: 14,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: isDriver
+                                      ? AppConstColors.white
+                                      : AppConstColors.orange,
+                                ),
                           ),
                         ),
                       ],

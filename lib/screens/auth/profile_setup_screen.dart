@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
 import 'package:rider_share/constants/app_routes.dart';
@@ -47,11 +46,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     Image.asset(AppConstImages.appLogo, width: 40),
                     Text(
                       "setup your profile",
-                      style: GoogleFonts.outfit(
-                        color: AppConstColors.primaryBlack,
-                        fontSize: 14,
-                        fontWeight: .w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                     // const Spacer(),
                   ],
@@ -84,7 +79,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           }
                           return Text(
                             value,
-                            style: GoogleFonts.outfit(
+                            style: TextStyle(
                               color: AppConstColors.secondary,
                               fontWeight: .bold,
                               fontSize: 40,
@@ -99,17 +94,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 Text(
                   "Tell us a little about yourself",
                   textAlign: .center,
-                  style: GoogleFonts.outfit(
-                    color: AppConstColors.secondary,
-                    fontSize: 22,
-                    fontWeight: .w600,
-                  ),
+                  style: Theme.of(context).textTheme.headlineMedium!
+                      .copyWith(color: AppConstColors.secondary),
                 ),
                 //desctiption
                 Text(
                   "Enter your full name and phone number\nto complete your profile.",
                   textAlign: .center,
-                  style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12),
+                  style: Theme.of(context).textTheme.labelMedium!
+                      .copyWith(color: Colors.grey),
                 ),
                 SizedBox(height: 40),
                 Form(

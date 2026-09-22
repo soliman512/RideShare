@@ -155,10 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           "find a ride or share your journey",
                           textAlign: .center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color:Colors.grey ),
                         ),
                         const SizedBox(height: 60),
                         //form - email field
@@ -211,10 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           "We'll send a verification code to your email\naddress.",
                           textAlign: .center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color:Colors.grey ),
                         ),
                         // const Spacer(flex: 2),
                       ],

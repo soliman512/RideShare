@@ -22,7 +22,7 @@ class AppTextFormField extends StatelessWidget {
     this.inputAction,
     this.onChange,
     this.maxLength,
-    this.counterText,
+    this.counterText = '',
   });
 
   final String? hintText;
@@ -73,13 +73,10 @@ class AppTextFormField extends StatelessWidget {
           fontWeight: .w300,
           fontSize: 14,
         ),
-        labelStyle: GoogleFonts.outfit(
-          color: AppConstColors.secondaryDark,
-          fontWeight: .w300,
-          fontSize: 14,
-        ),
+        labelStyle: Theme.of(context).textTheme.labelLarge!
+            .copyWith(color: AppConstColors.secondaryDark),
         filled: true,
-        fillColor: const Color.fromARGB(255, 240, 240, 240),
+        fillColor: AppConstColors.grey,
 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

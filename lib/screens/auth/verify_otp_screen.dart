@@ -22,7 +22,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     (_) => TextEditingController(),
   );
   GlobalKey<FormState> formState = GlobalKey<FormState>();
-  String needed = "NEEDED";
   ValueNotifier<int> timer = ValueNotifier<int>(59);
   Timer? _timer;
   void resendInTimer() {
@@ -136,7 +135,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           },
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return needed[index];
+                              return '*';
                             } else {
                               return null;
                             }
@@ -164,10 +163,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                     Flexible(
                       child: Text(
                         "Didn't receive the code?",
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge!
+                            .copyWith(color: Colors.grey),
+
                         textAlign: .center,
                       ),
                     ),
@@ -183,7 +181,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
                       child: Text(
                         "Resend code",
-                        style: GoogleFonts.outfit(
+                        style: TextStyle(
                           color: timer.value == 0
                               ? AppConstColors.approved
                               : Colors.grey,
@@ -218,16 +216,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                   children: [
                     Text(
                       "Resend in",
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge!
+                          .copyWith(color: Colors.grey),
                     ),
                     ValueListenableBuilder(
                       valueListenable: timer,
                       builder: (context, value, child) => Text(
                         "00:${timer.value.toString().padLeft(2, "0")}",
-                        style: GoogleFonts.outfit(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: .bold,
                           color: AppConstColors.secondary,

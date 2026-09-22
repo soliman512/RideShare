@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
               Text(
                 "Better Rides . Together.",
                 textAlign: .center,
-                style: GoogleFonts.outfit(
+                style: TextStyle(
                   color: Colors.blueGrey,
                   fontSize: 14,
                   fontWeight: .w200,

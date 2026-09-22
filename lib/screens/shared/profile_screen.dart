@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
+import 'package:rider_share/constants/app_routes.dart';
 import 'package:rider_share/extension/app_extensions.dart';
 import 'package:rider_share/widgets/app_button.dart';
 
@@ -51,6 +51,7 @@ class ProfileScreen extends StatelessWidget {
         },
       ),
     ];
+
     return SingleChildScrollView(
       child: Column(
         spacing: 12,
@@ -69,12 +70,12 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             child: Row(
-              mainAxisAlignment: .start,
+              mainAxisAlignment: .spaceAround,
               crossAxisAlignment: .center,
-              spacing: 12,
+              // spacing: 12,
               children: [
                 CircleAvatar(
-                  radius: 40,
+                  radius: 36,
                   backgroundColor: Colors.white.withValues(alpha: .3),
 
                   child: Text(
@@ -85,10 +86,10 @@ class ProfileScreen extends StatelessWidget {
                         .map(((e) => e[0]))
                         .join()
                         .toUpperCase(),
-                    style: GoogleFonts.outfit(
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       color: Colors.white,
-                      fontWeight: .bold,
-                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
                     ),
                   ),
                 ),
@@ -115,34 +116,130 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          ListTile(
-            contentPadding: .symmetric(vertical: 2, horizontal: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: .circular(20),
-              side: BorderSide(color: AppConstColors.orange, width: 1.6),
-            ),
-            tileColor: AppConstColors.orange.withValues(alpha: .01),
-            leading: Icon(
-              Remix.car_fill,
-              color: AppConstColors.orange,
-              size: 30,
-            ),
-            title: Text(
-              "as a driver info",
-              style: GoogleFonts.outfit(
-                color: AppConstColors.orange,
-                fontWeight: .bold,
-                fontSize: 16,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppConstColors.orange.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppConstColors.orange.withValues(alpha: 0.35),
+                width: 1.2,
               ),
-              textAlign: .center,
             ),
-            subtitle: FilledButton(
-              onPressed: () {},
-              style: FilledButton.styleFrom(
-                backgroundColor: AppConstColors.orange,
-                foregroundColor: Colors.white,
-              ),
-              child: Text("Register as a driver"),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppConstColors.orange.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        Remix.car_fill,
+                        color: AppConstColors.orange,
+                        size: 28,
+                      ),
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppConstColors.orange.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Driver",
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: AppConstColors.orange,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Title
+                Text(
+                  "Become a Driver",
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 6),
+
+                // Description
+                Text(
+                  "Want to offer rides and share your journey with others?",
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: Colors.grey.shade600, height: 1.5),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Registration info
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppConstColors.orange.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Remix.information_fill,
+                        color: AppConstColors.orange,
+                        size: 20,
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: Text(
+                          "You need to register and provide your personal "
+                          "and vehicle information before becoming a driver.",
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.grey.shade700,
+                                height: 1.5,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // Action button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Remix.arrow_right_line),
+                    label: const Text("Register as a Driver"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppConstColors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Section(
@@ -168,16 +265,16 @@ class ProfileScreen extends StatelessWidget {
 
                   title: Text(
                     setting.title,
-                    style: GoogleFonts.outfit(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppConstColors.primaryBlack,
-                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
 
                   subtitle: Text(
                     setting.subtitle,
-                    style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Colors.grey),
                   ),
 
                   trailing: Icon(
@@ -195,7 +292,52 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 8),
 
           AppMainButton(
-            onPressed: () {},
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isDismissible: true,
+                showDragHandle: true,
+                enableDrag: true,
+                builder: (context) {
+                  return Container(
+                    constraints: BoxConstraints(
+                      minHeight: context.screenHeight * .25,
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: .center,
+                      mainAxisAlignment: .center,
+                      spacing: 16,
+                      children: [
+                        Text(
+                          "Confirm Sign Out ?",
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(color: AppConstColors.error),
+                        ),
+                        Text(
+                          "Are you sure you want to sign out of your account?",
+
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(color: Colors.grey),
+                        ),
+                        AppMainButton(
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.loginScreen,
+                            );
+                          },
+                          title: "Sign out",
+                          icon: Remix.logout_circle_line,
+                          mainColor: AppConstColors.error,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
             title: "Sign out",
             icon: Remix.logout_circle_line,
             mainColor: AppConstColors.error,
@@ -204,12 +346,9 @@ class ProfileScreen extends StatelessWidget {
 
           Text(
             "RideShare v1.0.0",
-            style: TextStyle(
-              color: Colors.grey,
-              fontWeight: .w300,
-              fontSize: 10,
-            ),
-            textAlign: .center,
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: Colors.grey, fontWeight: FontWeight.w300),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
         ],
@@ -256,10 +395,10 @@ class ProfileInfoItem extends StatelessWidget {
         ),
         Text(
           text,
-          style: GoogleFonts.outfit(
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: primary ? Colors.white : Colors.white.withValues(alpha: .8),
             fontSize: primary ? 16 : 14,
-            fontWeight: primary ? .bold : .w300,
+            fontWeight: primary ? FontWeight.bold : FontWeight.w300,
           ),
         ),
       ],

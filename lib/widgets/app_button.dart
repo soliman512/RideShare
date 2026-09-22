@@ -56,7 +56,11 @@ class AppMainButton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 12,
         children: [
-          Text(title, style: GoogleFonts.outfit(fontSize: 18)),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.headlineSmall!
+                .copyWith(color: contentColor, fontWeight: .w300),
+          ),
 
           if (isLoading)
             SizedBox(

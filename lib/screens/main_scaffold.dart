@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
@@ -36,14 +35,11 @@ class _MainScaffoldState extends State<MainScaffold> {
       appBar: CustomAppBar(isThereNotifications: isThereNotifications),
       body: Padding(padding: const .all(20), child: pages[currentPage]),
       bottomNavigationBar: CircleNavBar(
-        activeLevelsStyle: GoogleFonts.outfit(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-        inactiveLevelsStyle: GoogleFonts.outfit(
-          color: Colors.white,
-          fontSize: 16,
-        ),
+        activeLevelsStyle: Theme.of(context).textTheme.bodyLarge
+            ?.copyWith(color: AppConstColors.white),
+
+        inactiveLevelsStyle: Theme.of(context).textTheme.bodyLarge
+            ?.copyWith(color: AppConstColors.white),
         onTap: (index) {
           currentPage = index;
           setState(() {});
@@ -62,10 +58,8 @@ class _MainScaffoldState extends State<MainScaffold> {
               Icon(Remix.home_6_fill, color: AppConstColors.white, size: 16),
               Text(
                 "Home",
-                style: GoogleFonts.outfit(
-                  color: AppConstColors.white,
-                  fontSize: 16,
-                ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: AppConstColors.white),
               ),
             ],
           ),
@@ -81,10 +75,8 @@ class _MainScaffoldState extends State<MainScaffold> {
               ),
               Text(
                 "Trips",
-                style: GoogleFonts.outfit(
-                  color: AppConstColors.white,
-                  fontSize: 16,
-                ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: AppConstColors.white),
               ),
             ],
           ),
@@ -100,10 +92,8 @@ class _MainScaffoldState extends State<MainScaffold> {
               ),
               Text(
                 "Profile",
-                style: GoogleFonts.outfit(
-                  color: AppConstColors.white,
-                  fontSize: 16,
-                ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: AppConstColors.white),
               ),
             ],
           ),

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
@@ -79,7 +78,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           },
           icon: Icon(Remix.arrow_left_wide_fill),
         ),
-        title: Text("Notifications", style: GoogleFonts.outfit(fontSize: 20)),
+        title: Text(
+          "Notifications",
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -148,9 +150,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         borderRadius: BorderRadius.circular(16),
 
                         border: Border.all(
-                          color: isRead
-                              ? const Color(0xFFE8EAF0)
-                              : const Color(0xFFD5E7FF),
+                          color: getNotificationColor(type),
 
                           width: 0.8,
                         ),
@@ -163,7 +163,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           CircleAvatar(
                             radius: 23,
                             backgroundColor: getNotificationColor(type)
-                                .withValues(alpha: .1),
+                                .withValues(alpha: .14),
 
                             child: Icon(
                               getNotificationIcon(type),
@@ -182,11 +182,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   title,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    color: AppConstColors.primaryBlack,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: .w700),
                                 ),
 
                                 const SizedBox(height: 5),
@@ -195,13 +192,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   content,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    color: AppConstColors.primaryBlack
-                                        .withValues(alpha: 0.60),
-                                    fontSize: 13,
-                                    height: 1.4,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: AppConstColors.primaryBlack
+                                            .withValues(alpha: 0.60),
+                                        fontSize: 13,
+                                        height: 1.4,
+                                        fontWeight: FontWeight.w400,
+                                      ),
                                 ),
                               ],
                             ),
@@ -214,13 +212,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             children: [
                               Text(
                                 formatDate(date),
-                                style: GoogleFonts.outfit(
-                                  color: AppConstColors.primaryBlack.withValues(
-                                    alpha: 0.55,
-                                  ),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: AppConstColors.primaryBlack
+                                          .withValues(alpha: 0.55),
+                                      fontWeight: FontWeight.w400,
+                                    ),
                               ),
 
                               const SizedBox(height: 10),

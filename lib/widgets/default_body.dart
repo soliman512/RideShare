@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:rider_share/constants/app_constants.dart';
 
 class DefaultBody extends StatelessWidget {
@@ -26,21 +25,18 @@ class DefaultBody extends StatelessWidget {
         ),
         Text(
           title,
-          textAlign: .center,
-          style: GoogleFonts.outfit(
-            fontSize: 20,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: AppConstColors.primaryBlack,
-            fontWeight: .w300,
+            fontWeight: FontWeight.w300,
           ),
         ),
         Text(
           subtitle,
-          textAlign: .center,
-
-          style: GoogleFonts.outfit(
-            fontSize: 14,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: const Color.fromARGB(255, 156, 156, 156),
-            fontWeight: .w300,
+            fontWeight: FontWeight.w300,
           ),
         ),
       ],
