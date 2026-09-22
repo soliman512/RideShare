@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # rider_share
 
 A new Flutter project.
@@ -15,3 +16,6 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# RideShare
+>>>>>>> f2752306389259f855331cefb7a9c0fcb1923bf6
