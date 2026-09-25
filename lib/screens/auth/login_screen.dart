@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           // main box
           AnimatedPositioned(
-            duration: Duration(milliseconds: 1000),
+            duration: Duration(milliseconds: 800),
             bottom: open ? 0 : -context.screenHeight * .7,
             child: Container(
               clipBehavior: .none,
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: context.screenWidth,
               height: context.screenHeight * .7,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppConstColors.primary,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
               ),
               child: Stack(
@@ -108,23 +108,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           spacing: 6,
                           children: [
-                            Image.network(
-                              "https://media.lordicon.com/icons/wired/outline/2319-hand-hello.gif",
-                              width: 20,
-                              height: 20,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return SizedBox();
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: Colors.transparent,
+                              child: ClipOval(
+                                child: Image.network(
+                                  "https://media.lordicon.com/icons/wired/outline/2319-hand-hello.gif",
+                                  width: 30,
+                                  height: 30,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                        if (loadingProgress == null) {
+                                          return child;
+                                        }
+                                        return const SizedBox();
+                                      },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const SizedBox();
                                   },
-                              errorBuilder: (context, error, stackTrace) {
-                                return SizedBox();
-                              },
+                                ),
+                              ),
                             ),
                             Text(
                               "Welcome to",
                               style: GoogleFonts.outfit(
-                                color: AppConstColors.primaryBlack,
+                                color: AppConstColors.primaryText,
                                 fontSize: 18,
                                 fontWeight: .w700,
                               ),
@@ -136,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             //   child: Text(
                             //     "اللغة العربية",
                             //     style: GoogleFonts.cairo(
-                            //       color: AppConstColors.primaryBlack,
+                            //       color: AppConstColors.secondaryText,
                             //       fontSize: 14,
                             //     ),
                             //     textAlign: .start,
@@ -147,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // const Spacer(flex: 1),
                         SizedBox(height: 40),
                         //appLogo
-                        Image.asset(AppConstImages.appLogo, width: 60),
+                        Image.asset(AppConstImages.appLogo, width: 50),
                         SizedBox(height: 8),
                         // appName
                         AppName(),
@@ -155,7 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           "find a ride or share your journey",
                           textAlign: .center,
-                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color:Colors.grey ),
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(color: AppConstColors.secondaryText),
                         ),
                         const SizedBox(height: 60),
                         //form - email field
@@ -208,7 +218,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           "We'll send a verification code to your email\naddress.",
                           textAlign: .center,
-                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color:Colors.grey ),
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(color: AppConstColors.secondaryText),
                         ),
                         // const Spacer(flex: 2),
                       ],

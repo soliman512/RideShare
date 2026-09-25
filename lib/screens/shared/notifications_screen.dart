@@ -71,7 +71,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         toolbarHeight: 80,
         backgroundColor: Colors.transparent,
-        foregroundColor: AppConstColors.primaryBlack,
+        foregroundColor: AppConstColors.primaryText,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -194,7 +194,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
-                                        color: AppConstColors.primaryBlack
+                                        color: AppConstColors.primaryText
                                             .withValues(alpha: 0.60),
                                         fontSize: 13,
                                         height: 1.4,
@@ -214,7 +214,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 formatDate(date),
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
-                                      color: AppConstColors.primaryBlack
+                                      color: AppConstColors.primaryText
                                           .withValues(alpha: 0.55),
                                       fontWeight: FontWeight.w400,
                                     ),

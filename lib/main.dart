@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rider_share/constants/app_constants.dart';
 import 'package:rider_share/constants/app_routes.dart';
 import 'package:rider_share/providers/auth_provider.dart';
+import 'package:rider_share/providers/current_page_provider.dart';
 import 'package:rider_share/providers/loading_provider.dart';
 import 'package:rider_share/screens/auth/login_screen.dart';
 import 'package:rider_share/screens/auth/profile_setup_screen.dart';
@@ -25,6 +26,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
           ChangeNotifierProvider(create: (_) => LoadingProvider()),
+          ChangeNotifierProvider(create: (_) => CurrentPageProvider())
         ],
         child: const MyApp(),
       ),
@@ -78,7 +80,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstColors.white.withValues(alpha: .9),
+      backgroundColor: AppConstColors.primary.withValues(alpha: .9),
       body: const Center(
         child: DefaultBody(
           imageOpacity: 1,

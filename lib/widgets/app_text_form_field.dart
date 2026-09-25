@@ -53,10 +53,10 @@ class AppTextFormField extends StatelessWidget {
       onChanged: onChange,
       obscureText: obscureText,
       maxLength: maxLength,
-      cursorColor: AppConstColors.secondary,
+      cursorColor: AppConstColors.subSecondary,
       showCursor: showCursor,
       style: GoogleFonts.outfit(
-        color: inputColor ?? AppConstColors.secondaryDark,
+        color: inputColor ?? AppConstColors.subSecondary,
         fontWeight: fontWeight ?? .normal,
         fontSize: fontSize ?? 16,
       ),
@@ -74,9 +74,9 @@ class AppTextFormField extends StatelessWidget {
           fontSize: 14,
         ),
         labelStyle: Theme.of(context).textTheme.labelLarge!
-            .copyWith(color: AppConstColors.secondaryDark),
+            .copyWith(color: AppConstColors.secondary),
         filled: true,
-        fillColor: AppConstColors.grey,
+        fillColor: AppConstColors.surface,
 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -91,7 +91,7 @@ class AppTextFormField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
-            color: AppConstColors.secondaryDark,
+            color: AppConstColors.subSecondary,
             width: 1.6,
           ),
         ),

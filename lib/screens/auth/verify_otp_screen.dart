@@ -78,12 +78,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                       children: [
                         Icon(
                           Remix.edit_circle_line,
-                          color: AppConstColors.secondary,
+                          color: AppConstColors.subSecondary,
                         ),
                         Text(
                           "change email",
                           style: GoogleFonts.outfit(
-                            color: AppConstColors.primaryBlack,
+                            color: AppConstColors.primaryText,
                             fontSize: 16,
                           ),
                           textAlign: .start,
@@ -100,13 +100,16 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 24,
                     fontWeight: .w700,
-                    color: AppConstColors.secondary,
+                    color: AppConstColors.subSecondary,
                   ),
                 ),
                 SizedBox(height: 12),
                 Text(
                   "Enter the 6-digit code sent to\nuser@example.com",
-                  style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey),
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    color: AppConstColors.secondaryText,
+                  ),
                   textAlign: .center,
                 ),
                 SizedBox(height: 22),
@@ -164,7 +167,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                       child: Text(
                         "Didn't receive the code?",
                         style: Theme.of(context).textTheme.bodyLarge!
-                            .copyWith(color: Colors.grey),
+                            .copyWith(color: AppConstColors.secondaryText),
 
                         textAlign: .center,
                       ),
@@ -184,7 +187,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         style: TextStyle(
                           color: timer.value == 0
                               ? AppConstColors.approved
-                              : Colors.grey,
+                              : AppConstColors.secondaryText,
                           fontSize: 14,
                           fontWeight: .w700,
                         ),
@@ -196,14 +199,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 // RichText(
                 //   textAlign: TextAlign.center,
                 //   text: TextSpan(
-                //     style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey),
+                //     style: GoogleFonts.outfit(fontSize: 16, color: AppConstColors.secondaryText),
                 //     children: [
                 //       const TextSpan(text: "Resend in\t\t"),
                 //       TextSpan(
                 //         text: "00:42",
                 //         style: GoogleFonts.outfit(
                 //           fontWeight: .bold,
-                //           color: AppConstColors.secondary,
+                //           color: AppConstColors.subSecondary,
                 //         ),
                 //       ),
                 //     ],
@@ -217,7 +220,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                     Text(
                       "Resend in",
                       style: Theme.of(context).textTheme.bodyLarge!
-                          .copyWith(color: Colors.grey),
+                          .copyWith(color: AppConstColors.secondaryText),
                     ),
                     ValueListenableBuilder(
                       valueListenable: timer,
@@ -226,7 +229,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: .bold,
-                          color: AppConstColors.secondary,
+                          color: AppConstColors.subSecondary,
                         ),
                       ),
                     ),

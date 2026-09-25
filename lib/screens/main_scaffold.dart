@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
 import 'package:rider_share/providers/auth_provider.dart';
+import 'package:rider_share/providers/current_page_provider.dart';
 import 'package:rider_share/screens/driver/driver_home_screen.dart';
 import 'package:rider_share/screens/rider/my_trips_screen.dart';
 import 'package:rider_share/screens/rider/rider_home_screen.dart';
@@ -21,45 +22,52 @@ class _MainScaffoldState extends State<MainScaffold> {
   ValueNotifier<bool> isThereNotifications = ValueNotifier<bool>(false);
   final riderHome = const RiderHomeScreen();
   final driverHome = const DriverHomeScreen();
-  int currentPage = 0;
   @override
   Widget build(BuildContext context) {
+    int currentPage = context.watch<CurrentPageProvider>().getCurrentPage;
+    final userMode = context.watch<AuthProvider>().currentUserMode;
+
     final List<Widget> pages = [
-      context.watch<AuthProvider>().currentUserMode == UserMode.rider
+      userMode == UserMode.rider
           ? const RiderHomeScreen()
           : const DriverHomeScreen(),
       const MyTripsScreen(),
       const ProfileScreen(),
     ];
     return Scaffold(
-      appBar: CustomAppBar(isThereNotifications: isThereNotifications),
-      body: Padding(padding: const .all(20), child: pages[currentPage]),
+      appBar: context.watch<CurrentPageProvider>().getCurrentPage == 2
+          ? AppBar(toolbarHeight: 40, automaticallyImplyLeading: false)
+          : CustomAppBar(isThereNotifications: isThereNotifications),
+      body: Padding(padding: const .all(16), child: pages[currentPage]),
       bottomNavigationBar: CircleNavBar(
         activeLevelsStyle: Theme.of(context).textTheme.bodyLarge
-            ?.copyWith(color: AppConstColors.white),
+            ?.copyWith(color: Colors.white),
 
         inactiveLevelsStyle: Theme.of(context).textTheme.bodyLarge
-            ?.copyWith(color: AppConstColors.white),
+            ?.copyWith(color: Colors.white),
+
         onTap: (index) {
-          currentPage = index;
-          setState(() {});
+          context.read<CurrentPageProvider>().setCurrentPage = index;
+          if (index == 1) {
+            context.read<AuthProvider>().setMode = UserMode.rider;
+          }
         },
 
         activeIcons: const [
-          Icon(Remix.home_6_fill, color: AppConstColors.white),
-          Icon(Remix.file_paper_2_fill, color: AppConstColors.white),
-          Icon(Remix.account_circle_fill, color: AppConstColors.white),
+          Icon(Remix.home_6_fill, color: Colors.white),
+          Icon(Remix.file_paper_2_fill, color: Colors.white),
+          Icon(Remix.account_circle_fill, color: Colors.white),
         ],
         inactiveIcons: [
           Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 2,
             children: [
-              Icon(Remix.home_6_fill, color: AppConstColors.white, size: 16),
+              Icon(Remix.home_6_fill, color: Colors.white, size: 16),
               Text(
                 "Home",
                 style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: AppConstColors.white),
+                    ?.copyWith(color: Colors.white),
               ),
             ],
           ),
@@ -68,15 +76,11 @@ class _MainScaffoldState extends State<MainScaffold> {
             mainAxisSize: MainAxisSize.min,
             spacing: 2,
             children: [
-              Icon(
-                Remix.file_paper_2_fill,
-                color: AppConstColors.white,
-                size: 16,
-              ),
+              Icon(Remix.file_paper_2_fill, color: Colors.white, size: 16),
               Text(
                 "Trips",
                 style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: AppConstColors.white),
+                    ?.copyWith(color: Colors.white),
               ),
             ],
           ),
@@ -85,44 +89,48 @@ class _MainScaffoldState extends State<MainScaffold> {
             mainAxisSize: MainAxisSize.min,
             spacing: 2,
             children: [
-              Icon(
-                Remix.account_circle_fill,
-                color: AppConstColors.white,
-                size: 16,
-              ),
+              Icon(Remix.account_circle_fill, color: Colors.white, size: 16),
               Text(
                 "Profile",
                 style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: AppConstColors.white),
+                    ?.copyWith(color: Colors.white),
               ),
             ],
           ),
         ],
-        color: Colors.white,
-        circleColor: Colors.white,
+        color: AppConstColors.secondary,
+        circleColor: AppConstColors.secondary,
         height: 60,
         circleWidth: 60,
 
         // tabCurve: ,
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
-        cornerRadius: const BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
-          bottomRight: Radius.circular(24),
-          bottomLeft: Radius.circular(24),
-        ),
-        shadowColor: AppConstColors.secondaryDark,
-        circleShadowColor: AppConstColors.secondaryDark,
+        padding: .zero,
+        // cornerRadius: const BorderRadius.only(
+        //   topLeft: Radius.circular(0),
+        //   topRight: Radius.circular(0),
+        //   bottomRight: Radius.circular(0),
+        //   bottomLeft: Radius.circular(0),
+        // ),
+        shadowColor: const Color.fromARGB(255, 191, 197, 204),
+        circleShadowColor: const Color.fromARGB(255, 191, 197, 204),
         elevation: 10,
         gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [AppConstColors.secondary, AppConstColors.secondaryDark],
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            AppConstColors.secondary,
+            AppConstColors.secondary,
+            AppConstColors.subSecondary,
+          ],
         ),
         circleGradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [AppConstColors.secondary, AppConstColors.secondaryDark],
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            AppConstColors.secondary,
+            AppConstColors.secondary,
+            AppConstColors.subSecondary,
+          ],
         ),
         activeIndex: currentPage,
       ),

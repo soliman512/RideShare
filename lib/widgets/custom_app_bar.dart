@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:rider_share/constants/app_constants.dart';
 import 'package:rider_share/constants/app_routes.dart';
 import 'package:rider_share/providers/auth_provider.dart';
+import 'package:rider_share/providers/current_page_provider.dart';
 import 'package:rider_share/widgets/app_name.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -21,17 +21,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     final AuthProvider mode = context.watch<AuthProvider>();
     bool isDriver = mode.currentUserMode == UserMode.driver;
+    bool hideSwitcher =
+        context.watch<CurrentPageProvider>().getCurrentPage == 1;
     return AppBar(
-      elevation: 0,
       toolbarHeight: 80,
-      // Prevent color change when scrolling
-      scrolledUnderElevation: 0,
-
-      // Remove Material 3 surface tint
-      surfaceTintColor: Colors.transparent,
-
-      // Optional: Keep AppBar transparent
-      shadowColor: Colors.transparent,
       backgroundColor: Colors.transparent,
       foregroundColor: AppConstColors.secondary,
       // leading: Image.asset(AppConstImages.appLogo, width: 6),
@@ -92,7 +85,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         ? Remix.notification_3_fill
                         : Remix.notification_3_line,
                     color: value
-                        ? AppConstColors.orange
+                        ? AppConstColors.accent
                         : AppConstColors.secondary,
                   );
                 },
@@ -116,99 +109,101 @@ class _CustomAppBarState extends State<CustomAppBar> {
         preferredSize: Size.fromHeight(40),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color.fromARGB(61, 255, 153, 0).withValues(alpha: .08),
-
-            // border: Border.symmetric(horizontal: BorderSide(color: AppConstColors.orange, width: 1))
+            color: const Color.fromARGB(17, 0, 153, 255).withValues(alpha: .08),
           ),
           padding: const .symmetric(horizontal: 20.0),
           child: Row(
             spacing: 6,
             crossAxisAlignment: .center,
-            mainAxisAlignment: .spaceBetween,
+            mainAxisAlignment: hideSwitcher ? .center : .spaceBetween,
             children: [
               Text(
-                "Become as a",
+                hideSwitcher
+                    ? "Trips are for Rider Mode only."
+                    : "Become as a ..",
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              Container(
-                width: 160,
-                height: 30,
-                // padding: .symmetric(vertical: 4, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[10],
-                  borderRadius: .circular(40),
-                  border: .all(color: AppConstColors.orange, width: 1),
-                ),
-                child: Stack(
-                  alignment: .center,
-                  children: [
-                    AnimatedAlign(
-                      duration: Duration(milliseconds: 100),
-                      alignment: isDriver ? .centerRight : .centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: .5,
-                        heightFactor: 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppConstColors.orange,
-                            borderRadius: .circular(40),
+              if (hideSwitcher) const SizedBox(height: 30),
+              if (!hideSwitcher)
+                Container(
+                  width: 160,
+                  height: 30,
+                  // padding: .symmetric(vertical: 4, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[10],
+                    borderRadius: .circular(40),
+                    border: .all(color: AppConstColors.secondary, width: 1),
+                  ),
+                  child: Stack(
+                    alignment: .center,
+                    children: [
+                      AnimatedAlign(
+                        duration: Duration(milliseconds: 100),
+                        alignment: isDriver ? .centerRight : .centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: .5,
+                          heightFactor: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppConstColors.secondary,
+                              borderRadius: .circular(40),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: .spaceAround,
-                      crossAxisAlignment: .center,
-                      // spacing: 40,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            if (isDriver == true) {
-                              context.read<AuthProvider>().setMode =
-                                  UserMode.rider;
-                              // setState(() {
-                              //   isDriver = false;
-                              // });
-                            }
-                          },
-                          child: Text(
-                            "Rider",
-                            textAlign: .center,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: isDriver
-                                      ? AppConstColors.orange
-                                      : AppConstColors.white,
-                                ),
+                      Row(
+                        mainAxisAlignment: .spaceAround,
+                        crossAxisAlignment: .center,
+                        // spacing: 40,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (isDriver == true) {
+                                context.read<AuthProvider>().setMode =
+                                    UserMode.rider;
+                                // setState(() {
+                                //   isDriver = false;
+                                // });
+                              }
+                            },
+                            child: Text(
+                              "Rider",
+                              textAlign: .center,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: isDriver
+                                        ? AppConstColors.secondary
+                                        : Colors.white,
+                                  ),
+                            ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            if (isDriver == false) {
-                              context.read<AuthProvider>().setMode =
-                                  UserMode.driver;
+                          GestureDetector(
+                            onTap: () {
+                              if (isDriver == false) {
+                                context.read<AuthProvider>().setMode =
+                                    UserMode.driver;
 
-                              // setState(() {
-                              //   isDriver = true;
-                              // });
-                            }
-                          },
-                          child: Text(
-                            "Driver",
-                            textAlign: .center,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: isDriver
-                                      ? AppConstColors.white
-                                      : AppConstColors.orange,
-                                ),
+                                // setState(() {
+                                //   isDriver = true;
+                                // });
+                              }
+                            },
+                            child: Text(
+                              "Driver",
+                              textAlign: .center,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: isDriver
+                                        ? Colors.white
+                                        : AppConstColors.secondary,
+                                  ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),

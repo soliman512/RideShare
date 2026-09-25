@@ -63,10 +63,7 @@ class ProfileScreen extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: .circular(20),
               gradient: LinearGradient(
-                colors: [
-                  AppConstColors.secondaryDark,
-                  AppConstColors.secondary,
-                ],
+                colors: [AppConstColors.subSecondary, AppConstColors.secondary],
               ),
             ),
             child: Row(
@@ -119,10 +116,10 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppConstColors.orange.withValues(alpha: 0.04),
+              color: AppConstColors.accent.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppConstColors.orange.withValues(alpha: 0.35),
+                color: AppConstColors.accent.withValues(alpha: 0.35),
                 width: 1.2,
               ),
             ),
@@ -136,12 +133,12 @@ class ProfileScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppConstColors.orange.withValues(alpha: 0.12),
+                        color: AppConstColors.accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
                         Remix.car_fill,
-                        color: AppConstColors.orange,
+                        color: AppConstColors.accent,
                         size: 28,
                       ),
                     ),
@@ -152,14 +149,14 @@ class ProfileScreen extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: AppConstColors.orange.withValues(alpha: 0.10),
+                        color: AppConstColors.accent.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         "Driver",
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
-                              color: AppConstColors.orange,
+                              color: AppConstColors.accent,
                               fontWeight: FontWeight.w600,
                             ),
                       ),
@@ -191,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppConstColors.orange.withValues(alpha: 0.06),
+                    color: AppConstColors.accent.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -199,7 +196,7 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Icon(
                         Remix.information_fill,
-                        color: AppConstColors.orange,
+                        color: AppConstColors.accent,
                         size: 20,
                       ),
 
@@ -230,7 +227,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: const Icon(Remix.arrow_right_line),
                     label: const Text("Register as a Driver"),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppConstColors.orange,
+                      backgroundColor: AppConstColors.accent,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -259,14 +256,14 @@ class ProfileScreen extends StatelessWidget {
 
                   leading: Icon(
                     setting.icon,
-                    color: AppConstColors.secondaryDark,
+                    color: AppConstColors.subSecondary,
                     size: 24,
                   ),
 
                   title: Text(
                     setting.title,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppConstColors.primaryBlack,
+                      color: AppConstColors.primaryText,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -279,7 +276,7 @@ class ProfileScreen extends StatelessWidget {
 
                   trailing: Icon(
                     Remix.arrow_right_s_line,
-                    color: AppConstColors.primaryBlack,
+                    color: AppConstColors.primaryText,
                   ),
                 );
               },
@@ -366,7 +363,7 @@ class Section extends StatelessWidget {
       padding: .all(12),
       decoration: BoxDecoration(
         borderRadius: .circular(20),
-        color: AppConstColors.grey,
+        color: AppConstColors.surface,
       ),
       child: child,
     );

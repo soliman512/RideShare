@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rider_share/constants/app_constants.dart';
 
 abstract final class AppTheme {
   static ThemeData theme = ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: Colors.white,
+    primaryColor: AppConstColors.primary,
+
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: AppConstColors.subSecondary,
+      selectionColor: Color.fromARGB(136, 22, 135, 201),
+      selectionHandleColor: AppConstColors.secondary,
+    ),
+
+    appBarTheme: AppBarTheme(
+      elevation: 0,
+      // Prevent color change when scrolling
+      scrolledUnderElevation: 0,
+
+      // Remove Material 3 surface tint
+      surfaceTintColor: Colors.transparent,
+
+      // Optional: Keep AppBar transparent
+      shadowColor: Colors.transparent,
+    ),
+
     // Default font
     fontFamily: GoogleFonts.outfit().fontFamily,
-    
-
     textTheme: TextTheme(
       // Headlines
       headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),

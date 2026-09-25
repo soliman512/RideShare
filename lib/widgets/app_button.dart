@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:rider_share/constants/app_constants.dart';
 
 class AppMainButton extends StatelessWidget {
@@ -22,7 +21,7 @@ class AppMainButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color buttonColor = mainColor ?? AppConstColors.secondaryDark;
+    final Color buttonColor = mainColor ?? AppConstColors.secondary;
 
     final Color contentColor = isOutlined ? buttonColor : Colors.white;
 
@@ -47,9 +46,14 @@ class AppMainButton extends StatelessWidget {
 
         padding: const EdgeInsets.symmetric(vertical: 14),
 
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
 
-        elevation: isOutlined ? 0 : 2,
+        // No shadow
+        elevation: 0,
+        shadowColor: Colors.transparent,
+
+        // Press feedback
+        overlayColor: buttonColor.withValues(alpha: .12),
       ),
 
       child: Row(

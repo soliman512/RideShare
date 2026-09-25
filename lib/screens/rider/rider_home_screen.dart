@@ -18,10 +18,8 @@ class RiderHomeScreen extends StatelessWidget {
           children: [
             RichText(
               text: TextSpan(
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: 18,
-                  color: AppConstColors.primaryBlack,
-                ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(fontSize: 18, color: AppConstColors.primaryText),
                 children: [
                   const TextSpan(text: "Good Morning, "),
                   TextSpan(
@@ -29,7 +27,7 @@ class RiderHomeScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppConstColors.orange,
+                      color: AppConstColors.accent,
                     ),
                   ),
                 ],
@@ -40,7 +38,7 @@ class RiderHomeScreen extends StatelessWidget {
               "Where are you going?",
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 fontSize: 26,
-                color: AppConstColors.primaryBlack,
+                color: AppConstColors.primaryText,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -58,16 +56,16 @@ class RiderHomeScreen extends StatelessWidget {
               textInputAction: .search,
               // onChanged: onChange,
               // obscureText: obscureText,
-              cursorColor: AppConstColors.secondary,
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: AppConstColors.primaryBlack),
+              cursorColor: AppConstColors.subSecondary,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(color: AppConstColors.primaryText),
               textAlign: .center,
               decoration: InputDecoration(
                 hintText: "ex. New Cairo",
                 labelText: "\t\tSearch\t\t",
                 prefixIcon: Icon(
                   Remix.map_pin_2_fill,
-                  color: AppConstColors.primaryBlack,
+                  color: AppConstColors.primaryText,
                 ),
                 suffixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -75,7 +73,7 @@ class RiderHomeScreen extends StatelessWidget {
                     onPressed: () {},
                     icon: Icon(Remix.search_2_line, color: Colors.white),
                     style: IconButton.styleFrom(
-                      backgroundColor: AppConstColors.orange,
+                      backgroundColor: AppConstColors.accent,
                       foregroundColor: Colors.white,
                       padding: const .all(4),
                       alignment: .center,
@@ -91,16 +89,16 @@ class RiderHomeScreen extends StatelessWidget {
                 floatingLabelAlignment: .center,
                 floatingLabelBehavior: .always,
                 labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppConstColors.orange,
+                  color: AppConstColors.accent,
                   fontWeight: FontWeight.w300,
                 ),
                 filled: true,
-                fillColor: const Color.fromARGB(255, 250, 250, 250),
+                fillColor: AppConstColors.accent.withValues(alpha: 0.02),
 
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(26),
                   borderSide: BorderSide(
-                    color: AppConstColors.primaryBlack,
+                    color: AppConstColors.secondary,
                     width: 2,
                   ),
                 ),
@@ -108,7 +106,7 @@ class RiderHomeScreen extends StatelessWidget {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(26),
                   borderSide: BorderSide(
-                    color: AppConstColors.primaryBlack,
+                    color: AppConstColors.secondary,
                     width: 2,
                   ),
                 ),
@@ -116,7 +114,7 @@ class RiderHomeScreen extends StatelessWidget {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide(
-                    color: AppConstColors.orange,
+                    color: AppConstColors.accent,
                     width: 3,
                   ),
                 ),

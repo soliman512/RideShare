@@ -63,9 +63,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: AppConstColors.white.withValues(
-                        alpha: .98,
-                      ),
+                      backgroundColor: Colors.white.withValues(alpha: .98),
                       child: ValueListenableBuilder(
                         valueListenable: userAvatar,
                         builder: (context, value, child) {
@@ -74,13 +72,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               Remix.user_5_line,
                               fill: 0.6,
                               size: 70,
-                              color: AppConstColors.primaryBlack,
+                              color: AppConstColors.primaryText,
                             );
                           }
                           return Text(
                             value,
                             style: TextStyle(
-                              color: AppConstColors.secondary,
+                              color: AppConstColors.subSecondary,
                               fontWeight: .bold,
                               fontSize: 40,
                             ),
@@ -95,7 +93,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   "Tell us a little about yourself",
                   textAlign: .center,
                   style: Theme.of(context).textTheme.headlineMedium!
-                      .copyWith(color: AppConstColors.secondary),
+                      .copyWith(color: AppConstColors.subSecondary),
                 ),
                 //desctiption
                 Text(
@@ -137,7 +135,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         labelText: "full name",
                         prefixIcon: Icon(
                           Remix.user_5_fill,
-                          color: AppConstColors.secondary,
+                          color: AppConstColors.subSecondary,
                         ),
                       ),
                       //phoneNumber
@@ -166,7 +164,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         labelText: "phone number (optional)",
                         prefixIcon: Icon(
                           Remix.phone_fill,
-                          color: AppConstColors.secondary,
+                          color: AppConstColors.subSecondary,
                         ),
                       ),
                     ],

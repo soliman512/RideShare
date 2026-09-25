@@ -15,12 +15,12 @@ class AppName extends StatelessWidget {
         style: GoogleFonts.outfit(
           fontSize: fontSize ?? 30,
           fontWeight: fontWeight ?? .bold,
-          color: AppConstColors.primaryBlack,
+          color: AppConstColors.secondary,
         ),
         children: [
           TextSpan(
             text: "Share",
-            style: TextStyle(color: AppConstColors.secondary),
+            style: TextStyle(color: AppConstColors.accent),
           ),
         ],
       ),

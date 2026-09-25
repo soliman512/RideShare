@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:rider_share/constants/app_constants.dart';
 import 'package:rider_share/constants/app_routes.dart';
 import 'package:rider_share/widgets/app_name.dart';

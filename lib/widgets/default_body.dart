@@ -27,7 +27,7 @@ class DefaultBody extends StatelessWidget {
           title,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: AppConstColors.primaryBlack,
+            color: AppConstColors.primaryText,
             fontWeight: FontWeight.w300,
           ),
         ),
