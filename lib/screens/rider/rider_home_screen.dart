@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
 
-import '../../widgets/default_body.dart';
+import '../../core/widgets/default_body.dart';
 
 class RiderHomeScreen extends StatelessWidget {
   const new({super.key});
@@ -98,7 +98,7 @@ class RiderHomeScreen extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(26),
                   borderSide: BorderSide(
-                    color: AppConstColors.secondary,
+                    color: AppConstColors.primaryText,
                     width: 2,
                   ),
                 ),
@@ -106,7 +106,7 @@ class RiderHomeScreen extends StatelessWidget {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(26),
                   borderSide: BorderSide(
-                    color: AppConstColors.secondary,
+                    color: AppConstColors.primaryText,
                     width: 2,
                   ),
                 ),

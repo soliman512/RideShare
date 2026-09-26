@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/constants/app_routes.dart';
-import 'package:rider_share/providers/auth_provider.dart';
-import 'package:rider_share/providers/current_page_provider.dart';
-import 'package:rider_share/widgets/app_name.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_routes.dart';
+import 'package:rider_share/core/providers/auth_provider.dart';
+import 'package:rider_share/core/providers/current_page_provider.dart';
+import 'package:rider_share/core/widgets/app_name.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const new({super.key, required this.isThereNotifications});
@@ -109,7 +109,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
         preferredSize: Size.fromHeight(40),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color.fromARGB(17, 0, 153, 255).withValues(alpha: .08),
+            color: AppConstColors.subSecondary.withValues(alpha: .06),
           ),
           padding: const .symmetric(horizontal: 20.0),
           child: Row(
@@ -126,8 +126,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
               if (hideSwitcher) const SizedBox(height: 30),
               if (!hideSwitcher)
                 Container(
-                  width: 160,
-                  height: 30,
+                  width: 140,
+                  height: 28,
                   // padding: .symmetric(vertical: 4, horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.grey[10],
@@ -138,7 +138,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     alignment: .center,
                     children: [
                       AnimatedAlign(
-                        duration: Duration(milliseconds: 100),
+                        duration: Duration(milliseconds: 360),
+                        curve: Curves.easeInBack,
                         alignment: isDriver ? .centerRight : .centerLeft,
                         child: FractionallySizedBox(
                           widthFactor: .5,
@@ -166,15 +167,30 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 // });
                               }
                             },
-                            child: Text(
-                              "Rider",
-                              textAlign: .center,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: isDriver
-                                        ? AppConstColors.secondary
-                                        : Colors.white,
-                                  ),
+                            child: Row(
+                              spacing: 4,
+                              crossAxisAlignment: .center,
+                              mainAxisSize: .min,
+                              mainAxisAlignment: .center,
+                              children: [
+                                Icon(
+                                  Remix.user_fill,
+                                  color: isDriver
+                                      ? AppConstColors.secondary
+                                      : Colors.white,
+                                  size: 10,
+                                ),
+                                Text(
+                                  "Rider",
+                                  textAlign: .center,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: isDriver
+                                            ? AppConstColors.secondary
+                                            : Colors.white,
+                                      ),
+                                ),
+                              ],
                             ),
                           ),
                           GestureDetector(
@@ -188,15 +204,30 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 // });
                               }
                             },
-                            child: Text(
-                              "Driver",
-                              textAlign: .center,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: isDriver
-                                        ? Colors.white
-                                        : AppConstColors.secondary,
-                                  ),
+                            child: Row(
+                              spacing: 4,
+                              mainAxisSize: .min,
+                              crossAxisAlignment: .center,
+                              mainAxisAlignment: .center,
+                              children: [
+                                Icon(
+                                  Remix.car_fill,
+                                  color: isDriver
+                                      ? Colors.white
+                                      : AppConstColors.secondary,
+                                  size: 10,
+                                ),
+                                Text(
+                                  "Driver",
+                                  textAlign: .center,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: isDriver
+                                            ? Colors.white
+                                            : AppConstColors.secondary,
+                                      ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

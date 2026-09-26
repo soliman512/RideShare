@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/providers/auth_provider.dart';
-import 'package:rider_share/providers/current_page_provider.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:rider_share/core/providers/auth_provider.dart';
+import 'package:rider_share/core/providers/current_page_provider.dart';
 import 'package:rider_share/screens/driver/driver_home_screen.dart';
 import 'package:rider_share/screens/rider/my_trips_screen.dart';
 import 'package:rider_share/screens/rider/rider_home_screen.dart';
 import 'package:rider_share/screens/shared/profile_screen.dart';
-import 'package:rider_share/widgets/custom_app_bar.dart';
+import 'package:rider_share/core/widgets/custom_app_bar.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -36,7 +36,13 @@ class _MainScaffoldState extends State<MainScaffold> {
     ];
     return Scaffold(
       appBar: context.watch<CurrentPageProvider>().getCurrentPage == 2
-          ? AppBar(toolbarHeight: 40, automaticallyImplyLeading: false)
+          ? AppBar(
+              toolbarHeight: 20,
+              automaticallyImplyLeading: false,
+              shadowColor: Colors.transparent,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+            )
           : CustomAppBar(isThereNotifications: isThereNotifications),
       body: Padding(padding: const .all(16), child: pages[currentPage]),
       bottomNavigationBar: CircleNavBar(

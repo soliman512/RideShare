@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/constants/app_routes.dart';
-import 'package:rider_share/extension/app_extensions.dart';
-import 'package:rider_share/widgets/app_button.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_routes.dart';
+import 'package:rider_share/core/extension/app_extensions.dart';
+import 'package:rider_share/core/models/setting_tile_model.dart';
+import 'package:rider_share/core/widgets/app_button.dart';
+import 'package:rider_share/core/widgets/user_avatar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const new({super.key});
@@ -71,25 +73,7 @@ class ProfileScreen extends StatelessWidget {
               crossAxisAlignment: .center,
               // spacing: 12,
               children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: Colors.white.withValues(alpha: .3),
-
-                  child: Text(
-                    "Soliman Ali"
-                        .trim()
-                        .split(RegExp(r'\s+'))
-                        .take(2)
-                        .map(((e) => e[0]))
-                        .join()
-                        .toUpperCase(),
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 30,
-                    ),
-                  ),
-                ),
+                UserAvatar(name: "soliman ali"),
                 Column(
                   mainAxisAlignment: .spaceEvenly,
                   crossAxisAlignment: .start,
@@ -239,7 +223,12 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          Section(
+          Container(
+            padding: .all(12),
+            decoration: BoxDecoration(
+              borderRadius: .circular(20),
+              color: Colors.transparent,
+            ),
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -251,7 +240,7 @@ class ProfileScreen extends StatelessWidget {
 
                 return ListTile(
                   contentPadding: .symmetric(horizontal: 8),
-
+                  shape: RoundedRectangleBorder(borderRadius: .circular(20)),
                   onTap: setting.onTap,
 
                   leading: Icon(
@@ -354,22 +343,6 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class Section extends StatelessWidget {
-  const new({super.key, required this.child});
-  final Widget child;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: .all(12),
-      decoration: BoxDecoration(
-        borderRadius: .circular(20),
-        color: AppConstColors.surface,
-      ),
-      child: child,
-    );
-  }
-}
-
 class ProfileInfoItem extends StatelessWidget {
   const new({
     super.key,
@@ -401,18 +374,4 @@ class ProfileInfoItem extends StatelessWidget {
       ],
     );
   }
-}
-
-class ProfileItemModel {
-  const ProfileItemModel({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
 }

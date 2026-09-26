@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/constants/app_routes.dart';
-import 'package:rider_share/widgets/app_button.dart';
-import 'package:rider_share/widgets/app_text_form_field.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_routes.dart';
+import 'package:rider_share/core/widgets/app_button.dart';
+import 'package:rider_share/core/widgets/app_text_form_field.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   const VerifyOtpScreen({super.key});

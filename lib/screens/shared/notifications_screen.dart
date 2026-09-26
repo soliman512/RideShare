@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
 import 'package:rider_share/core/urils/app_date_formatter.dart';
-import 'package:rider_share/models/notification_model.dart';
-import 'package:rider_share/providers/loading_provider.dart';
-import 'package:rider_share/widgets/default_body.dart';
+import 'package:rider_share/core/models/notification_model.dart';
+import 'package:rider_share/core/providers/loading_provider.dart';
+import 'package:rider_share/core/widgets/default_body.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const new({super.key});

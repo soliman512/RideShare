@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/constants/app_routes.dart';
-import 'package:rider_share/extension/app_extensions.dart';
-import 'package:rider_share/widgets/app_button.dart';
-import 'package:rider_share/widgets/app_name.dart';
-import 'package:rider_share/widgets/app_text_form_field.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_routes.dart';
+import 'package:rider_share/core/extension/app_extensions.dart';
+import 'package:rider_share/core/widgets/app_button.dart';
+import 'package:rider_share/core/widgets/app_name.dart';
+import 'package:rider_share/core/widgets/app_text_form_field.dart';
 
 enum CarPosition { left, center, right }
 

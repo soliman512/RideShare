@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rider_share/constants/app_constants.dart';
-import 'package:rider_share/constants/app_routes.dart';
-import 'package:rider_share/providers/auth_provider.dart';
-import 'package:rider_share/providers/current_page_provider.dart';
-import 'package:rider_share/providers/loading_provider.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_routes.dart';
+import 'package:rider_share/core/providers/auth_provider.dart';
+import 'package:rider_share/core/providers/current_page_provider.dart';
+import 'package:rider_share/core/providers/loading_provider.dart';
 import 'package:rider_share/screens/auth/login_screen.dart';
 import 'package:rider_share/screens/auth/profile_setup_screen.dart';
 import 'package:rider_share/screens/auth/verify_otp_screen.dart';
@@ -13,9 +13,9 @@ import 'package:rider_share/screens/main_scaffold.dart';
 import 'package:rider_share/screens/rider/ride_details_screen.dart';
 import 'package:rider_share/screens/shared/notifications_screen.dart';
 import 'package:rider_share/screens/splash/splash_screen.dart';
-import 'package:rider_share/theme/app_theme.dart';
+import 'package:rider_share/core/theme/app_theme.dart';
 import 'package:flutter/services.dart';
-import 'package:rider_share/widgets/default_body.dart';
+import 'package:rider_share/core/widgets/default_body.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

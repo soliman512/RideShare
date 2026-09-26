@@ -1,0 +1,41 @@
+import 'package:rider_share/core/models/driver_profile_model.dart';
+import 'package:rider_share/core/models/user_model.dart';
+import 'package:rider_share/core/models/vehicle_model.dart';
+
+enum RideStatus { active, cancelled, full, completed }
+
+class RideModel {
+  final String from;
+  final String destination;
+  final DateTime departureDate;
+
+  final List<String> stopPoints;
+
+  final int totalSeats;
+  final double distance;
+
+  // Driver
+  final DriverProfileModel driver;
+  //riders
+  final List<UserModel> riders;
+
+  // Car
+  final VehicleModel car;
+  // Ride
+  final double price;
+  final RideStatus status;
+
+  const RideModel({
+    required this.from,
+    required this.destination,
+    required this.departureDate,
+    required this.stopPoints,
+    required this.totalSeats,
+    required this.distance,
+    required this.driver,
+    required this.riders,
+    required this.car,
+    required this.price,
+    required this.status,
+  });
+}

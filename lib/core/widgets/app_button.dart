@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:rider_share/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
 
 class AppMainButton extends StatelessWidget {
   const AppMainButton({
     super.key,
     required this.onPressed,
     required this.title,
-    required this.icon,
+    this.icon,
     this.isLoading = false,
     this.mainColor,
     this.isOutlined = false,
   });
 
-  final IconData icon;
+  final IconData? icon;
   final String title;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -76,7 +76,7 @@ class AppMainButton extends StatelessWidget {
               ),
             )
           else
-            Icon(icon, color: contentColor),
+            icon != null ? Icon(icon, color: contentColor) : SizedBox.shrink(),
         ],
       ),
     );

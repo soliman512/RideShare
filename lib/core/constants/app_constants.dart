@@ -11,6 +11,8 @@ abstract class AppConstImages {
       "$_path/illustration/rider_home_centeral_shape.png";
   static const String noNotificationsYet =
       "$_path/illustration/no_notifications_yet.png";
+  static const String notFoundYet =
+      "$_path/illustration/not_found_yet.png";
   static const String splashScreenBackground =
       "$_path/illustration/splash_screen_background.png";
 

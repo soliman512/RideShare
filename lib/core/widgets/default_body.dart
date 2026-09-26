@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rider_share/constants/app_constants.dart';
+import 'package:rider_share/core/constants/app_constants.dart';
 
 class DefaultBody extends StatelessWidget {
   const new({
