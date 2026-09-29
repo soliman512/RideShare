@@ -1,10 +1,7 @@
-
 enum DriverApprovalStatus { pending, underReview, approved, rejected }
 
-
-class DriverProfileModel {
-
-  const DriverProfileModel({
+class DriverModel {
+  const DriverModel({
     required this.id,
     required this.userId,
     required this.idCardUrl,
@@ -14,14 +11,13 @@ class DriverProfileModel {
     required this.totalRides,
     this.approvedAt,
   });
-  
+
   final String id;
   final String userId;
   final String idCardUrl;
   final String criminalRecordUrl;
   final DriverApprovalStatus approvalStatus;
-  final double driverRating; 
-  final int totalRides; 
-  final DateTime? approvedAt; 
-
+  final double driverRating;
+  final int totalRides;
+  final DateTime? approvedAt;
 }

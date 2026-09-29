@@ -3,62 +3,28 @@ import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_constants.dart';
-import 'package:ride_share/core/data/mock_database.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/current_page_provider.dart';
-import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/screens/driver/driver_home_screen.dart';
 import 'package:ride_share/screens/rider/my_trips_screen.dart';
 import 'package:ride_share/screens/rider/rider_home_screen.dart';
 import 'package:ride_share/screens/shared/profile_screen.dart';
 import 'package:ride_share/core/widgets/custom_app_bar.dart';
 
-class MainScaffold extends StatefulWidget {
-  const MainScaffold({super.key});
+ValueNotifier<bool> isThereNotifications = ValueNotifier<bool>(false);
 
-  @override
-  State<MainScaffold> createState() => _MainScaffoldState();
-}
-
-class _MainScaffoldState extends State<MainScaffold> {
-  ValueNotifier<bool> isThereNotifications = ValueNotifier<bool>(false);
-
-  @override
-  void initState() {
-    print("--------------------- users Table ------------------------");
-    print(usersTable.length);
-    for (var element in usersTable) {
-      print(element.id);
-      print(element.email);
-      print(element.fullName);
-      print(element.phone);
-      print(element.createdAt);
-      print(element.currentMode);
-      print("${AppStorageKeys.canBecomeDriver} : false");
-      print("===================");
-    }
-    print("--------------------- end  ------------------------");
-    super.initState();
-  }
-
-  String userFullName = 'Unkoun';
+class MainScaffold extends StatelessWidget {
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authProviderWatch = context.watch<AuthProvider>();
     int currentPage = context.watch<CurrentPageProvider>().getCurrentPage;
-    final userMode = authProviderWatch.currentUserMode;
-    final user = authProviderWatch.getUser;
-    if (user == null) {
-      context.watch<LoadingProvider>().show();
-    } else {
-      context.watch<LoadingProvider>().hide();
-      userFullName = user.fullName.split(' ').take(1).join();
-    }
+    final userMode = context.watch<AuthProvider>().currentUserMode;
+   
 
     final List<Widget> pages = [
       userMode == UserMode.rider
-          ? RiderHomeScreen(fullName: userFullName)
+          ? RiderHomeScreen()
           : const DriverHomeScreen(),
       const MyTripsScreen(),
       const ProfileScreen(),

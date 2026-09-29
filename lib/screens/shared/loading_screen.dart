@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/extension/screen_size_extension.dart';
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({super.key});
@@ -11,11 +12,12 @@ class LoadingScreen extends StatelessWidget {
       body: Center(
         child: Container(
           width: double.infinity,
-          margin: const .symmetric(horizontal: 60),
-          padding: const .all(28),
+          margin: .symmetric(horizontal: context.screenWidth * .2),
+          padding: const .all(8),
           decoration: BoxDecoration(
             color: AppConstColors.surface,
             borderRadius: BorderRadius.circular(20),
+            shape: BoxShape.rectangle,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.12),
@@ -28,32 +30,28 @@ class LoadingScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 46,
-                height: 46,
-                child: CircularProgressIndicator(
-                  strokeWidth: 4,
+                width: 140,
+                height: 140,
+                child: Image.asset(AppConstImages.loading, fit: .contain),
+              ),
+
+              Text(
+                'Please wait a second...',
+                textAlign: .center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppConstColors.primaryText,
+                  fontWeight: .bold,
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
 
-              Text(
-                'Please wait',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'We are getting everything ready for you.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: Colors.black54, height: 1.4),
-              ),
+              // Text(
+              //   'We are getting everything ready for you.',
+              //   textAlign: TextAlign.center,
+              //   style: Theme.of(context).textTheme.bodyMedium
+              //       ?.copyWith(color: Colors.black54, height: 1.4),
+              // ),
             ],
           ),
         ),

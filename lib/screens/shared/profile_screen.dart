@@ -4,18 +4,44 @@ import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_constants.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
-import 'package:ride_share/core/extension/screen_size_extension.dart';
 import 'package:ride_share/core/models/setting_tile_model.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
-import 'package:ride_share/core/urils/app_date_formatter.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/user_avatar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:ride_share/core/widgets/show_app_modal_sheet.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const new({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  //get app info:
+  String? appName;
+
+  String? appVersion;
+
+  Future<void> getAppInfo() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    appName = packageInfo.appName;
+    appVersion = packageInfo.version;
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    getAppInfo();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    bool messages = true;
+    bool rideRequests = true;
     final String userFullName = context.watch<AuthProvider>().getUser!.fullName;
     final String userEmail = context.watch<AuthProvider>().getUser!.email;
     final String userPhone =
@@ -24,50 +50,302 @@ class ProfileScreen extends StatelessWidget {
         .watch<AuthProvider>()
         .getUser!
         .createdAt;
+    bool canBecomeDriver =
+        context.read<AuthProvider>().canBecomeDriver ?? false;
 
+    ///actions items
     final List<ProfileItemModel> profileSettings = [
+      // Account Settings
+      // ─────────────────────────────────────────────
       ProfileItemModel(
         icon: Remix.user_settings_line,
         title: 'Account Settings',
         subtitle: 'Manage your personal information',
         onTap: () {
-          debugPrint('Account Settings tapped');
+          showAppModalSheet(
+            context,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Account Settings',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Edit profile',
+                    onPressed: () {
+                      Navigator.pop(context);
+
+                      showAppModalSheet(
+                        context,
+                        children: [
+                          Text(
+                            'Edit Profile',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          Text(
+                            'Update your personal information.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          TextFormField(
+                            initialValue: userFullName,
+                            decoration: const InputDecoration(
+                              labelText: 'Full Name',
+                              prefixIcon: Icon(Remix.user_line),
+                            ),
+                          ),
+
+                          TextFormField(
+                            initialValue: userPhone,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(
+                              labelText: 'Phone Number',
+                              prefixIcon: Icon(Remix.phone_line),
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: AppMainButton(
+                              onPressed: () {
+                                // Save profile changes
+                                Navigator.pop(context);
+                              },
+                              title: 'Save Changes',
+                              icon: Remix.save_line,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    icon: const Icon(Remix.edit_line),
+                  ),
+                ],
+              ),
+
+              Text(
+                'Update your personal information and account details.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.user_line),
+                title: const Text('Full Name'),
+                subtitle: Text(userFullName),
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.mail_line),
+                title: const Text('Email'),
+                subtitle: Text(userEmail),
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.phone_line),
+                title: const Text('Phone Number'),
+                subtitle: Text(userPhone.isEmpty ? 'Not added' : userPhone),
+              ),
+            ],
+          );
         },
       ),
-      ProfileItemModel(
-        icon: Remix.lock_password_line,
-        title: 'Privacy & Security',
-        subtitle: 'Manage your password and security',
-        onTap: () {
-          debugPrint('Privacy & Security tapped');
-        },
-      ),
+
+      // Notifications
+      // ─────────────────────────────────────────────
       ProfileItemModel(
         icon: Remix.notification_3_line,
         title: 'Notifications',
         subtitle: 'Manage your notification preferences',
         onTap: () {
-          debugPrint('Notifications tapped');
+          showAppModalSheet(
+            context,
+            children: [
+              Text(
+                'Notifications',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+
+              Text(
+                'Choose which notifications you want to receive.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // SwitchListTile.adaptive(
+                  //   contentPadding: EdgeInsets.zero,
+                  //   secondary: const Icon(Remix.route_line),
+                  //   title: const Text('Trip Updates'),
+                  //   subtitle: const Text('Receive updates about your trips'),
+                  //   value: tripUpdates,
+                  //   onChanged: (value) {
+                  //     setState(() {
+                  //       tripUpdates = value;
+                  //     });
+
+                  //     // Save notification preference
+                  //   },
+                  // ),
+                  SwitchListTile.adaptive(
+                    activeThumbColor: AppConstColors.subSecondary,
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(Remix.message_2_line),
+                    title: const Text('Messages'),
+                    subtitle: const Text(
+                      'Receive notifications for new messages',
+                    ),
+                    value: messages,
+                    onChanged: (value) {
+                      setState(() {
+                        messages = value;
+                      });
+
+                      // Save notification preference
+                    },
+                  ),
+                  if (canBecomeDriver)
+                    SwitchListTile.adaptive(
+                      activeThumbColor: AppConstColors.subSecondary,
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(Remix.car_line),
+                      title: const Text('Ride Requests'),
+                      subtitle: const Text(
+                        'Receive notifications for ride requests',
+                      ),
+                      value: rideRequests,
+                      onChanged: (value) {
+                        setState(() {
+                          rideRequests = value;
+                        });
+
+                        // Save notification preference
+                      },
+                    ),
+                ],
+              ),
+            ],
+          );
         },
       ),
+
+      // Help & FAQ
+      // ─────────────────────────────────────────────
       ProfileItemModel(
         icon: Remix.question_line,
         title: 'Help & FAQ',
         subtitle: 'Get help and find answers',
         onTap: () {
-          debugPrint('Help & FAQ tapped');
+          showAppModalSheet(
+            context,
+            children: [
+              Text(
+                'Help & FAQ',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+
+              Text(
+                'Find answers to common questions about RideShare.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              HelpExpansionTile(
+                icon: Remix.search_line,
+                title: 'How do I book a ride?',
+                text:
+                    'Search for your destination from the home screen, '
+                    'choose an available ride, and follow the booking steps.',
+              ),
+
+              HelpExpansionTile(
+                icon: Remix.car_line,
+                title: 'How do I become a driver?',
+                text:
+                    'Open your profile and select the Become a Driver '
+                    'option. Follow the registration steps to submit '
+                    'your driver information.',
+              ),
+
+              HelpExpansionTile(
+                icon: Remix.close_circle_line,
+                title: 'How can I cancel a ride?',
+                text:
+                    'Open your trip details and use the cancellation '
+                    'option if the trip is still eligible for cancellation.',
+              ),
+            ],
+          );
         },
       ),
+
+      // About
+      // ─────────────────────────────────────────────
+      ///TODO: make this secion work
       ProfileItemModel(
         icon: Remix.information_line,
-        title: 'About ride_share',
+        title: 'About RideShare',
         subtitle: 'Learn more about the app',
         onTap: () {
-          debugPrint('About ride_share tapped');
+          showAppModalSheet(
+            context,
+            children: [
+              Text(
+                'About RideShare',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+
+              Text(
+                'A simple platform for connecting riders and drivers.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.information_line),
+                title: const Text('App Version'),
+                subtitle: Text('$appName v$appVersion'),
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.shield_check_line),
+                title: const Text('Privacy Policy'),
+                trailing: const Icon(Remix.arrow_right_s_line),
+                onTap: () {
+                  // Open privacy policy
+                },
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.file_text_line),
+                title: const Text('Terms of Service'),
+                trailing: const Icon(Remix.arrow_right_s_line),
+                onTap: () {
+                  // Open terms
+                },
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Remix.github_line),
+                title: const Text('About the Project'),
+              ),
+            ],
+          );
         },
       ),
     ];
-
     return SingleChildScrollView(
       child: Column(
         spacing: 12,
@@ -76,7 +354,7 @@ class ProfileScreen extends StatelessWidget {
           // user data (user model)
           Container(
             padding: .all(12),
-            height: context.screenHeight * .14,
+            // height: context.screenHeight * .14,
             decoration: BoxDecoration(
               borderRadius: .circular(20),
               boxShadow: [
@@ -99,6 +377,7 @@ class ProfileScreen extends StatelessWidget {
                 Column(
                   mainAxisAlignment: .spaceEvenly,
                   crossAxisAlignment: .start,
+                  spacing: 4,
                   children: [
                     ProfileInfoItem(
                       icon: Remix.user_5_fill,
@@ -109,11 +388,12 @@ class ProfileScreen extends StatelessWidget {
                       text: userEmail,
                       primary: false,
                     ),
-                    ProfileInfoItem(
-                      icon: Remix.phone_line,
-                      text: userPhone,
-                      primary: false,
-                    ),
+                    if (userPhone.isNotEmpty)
+                      ProfileInfoItem(
+                        icon: Remix.phone_line,
+                        text: userPhone,
+                        primary: false,
+                      ),
                     ProfileInfoItem(
                       icon: Remix.calendar_event_line,
                       text: DateFormat(DateFormat.YEAR_MONTH_DAY)
@@ -157,65 +437,31 @@ class ProfileScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(11),
-                      decoration: BoxDecoration(
-                        color: AppConstColors.primary.withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Remix.car_fill,
-                        color: AppConstColors.subSecondary,
-                        size: 24,
-                      ),
+                ListTile(
+                  contentPadding: .zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(11),
+                    decoration: BoxDecoration(
+                      color: AppConstColors.primary.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-
-                    const SizedBox(width: 12),
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Become a Driver',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Start offering rides',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
+                    child: Icon(
+                      Remix.car_fill,
+                      color: AppConstColors.subSecondary,
+                      size: 24,
                     ),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppConstColors.subSecondary.withValues(
-                          alpha: 0.10,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Driver',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppConstColors.subSecondary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
+                  title: Text(
+                    'Become a Driver',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    'Start offering rides',
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Colors.grey.shade600),
+                  ),
                 ),
-
-                const SizedBox(height: 18),
 
                 // Description
                 Text(
@@ -252,13 +498,12 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 18),
 
-                // CTA
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () {},
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppConstColors.subSecondary,
+                      backgroundColor: AppConstColors.accent,
                       foregroundColor: AppConstColors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -338,64 +583,47 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 8),
           //logout
           AppMainButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isDismissible: true,
-                showDragHandle: true,
-                enableDrag: true,
-                builder: (context) {
-                  return Container(
-                    constraints: BoxConstraints(
-                      minHeight: context.screenHeight * .25,
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: .center,
-                      mainAxisAlignment: .center,
-                      spacing: 16,
-                      children: [
-                        Text(
-                          "Confirm Sign Out ?",
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(color: AppConstColors.error),
-                        ),
-                        Text(
-                          "Are you sure you want to sign out of your account?\n- we will clear all your data -",
-                          textAlign: .center,
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(color: Colors.grey),
-                        ),
-                        AppMainButton(
-                          onPressed: () async {
-                            SharedPreferences prefs =
-                                await SharedPreferences.getInstance();
-                            prefs.clear();
-                            if (!context.mounted) return;
-                            Navigator.pushReplacementNamed(
-                              context,
-                              AppRoutes.loginScreen,
-                            );
-                          },
-                          title: "Sign out",
-                          icon: Remix.logout_circle_line,
-                          mainColor: AppConstColors.error,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
+            onPressed: () => showAppModalSheet(
+              context,
+              children: [
+                Text(
+                  'Confirm Sign Out?',
+                  style: Theme.of(context).textTheme.headlineMedium
+                      ?.copyWith(color: AppConstColors.error),
+                ),
+                Text(
+                  'Are you sure you want to sign out of your account?\n'
+                  '- we will clear all your data -',
+                  textAlign: .center,
+                  style: Theme.of(context).textTheme.labelLarge
+                      ?.copyWith(color: Colors.grey),
+                ),
+                AppMainButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+
+                    if (!context.mounted) return;
+
+                    Navigator.pushReplacementNamed(
+                      context,
+                      AppRoutes.loginScreen,
+                    );
+                  },
+                  title: 'Sign out',
+                  icon: Remix.logout_circle_line,
+                  mainColor: AppConstColors.error,
+                ),
+              ],
+            ),
             title: "Sign out",
             icon: Remix.logout_circle_line,
             mainColor: AppConstColors.error,
             isOutlined: true,
           ),
-
+          //app version
           Text(
-            "ride_share v1.0.0",
+            "$appName \t v$appVersion",
             style: Theme.of(context).textTheme.labelSmall
                 ?.copyWith(color: Colors.grey, fontWeight: FontWeight.w300),
             textAlign: TextAlign.center,
@@ -403,6 +631,34 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 10),
         ],
       ),
+    );
+  }
+}
+
+class HelpExpansionTile extends StatelessWidget {
+  const new({
+    super.key,
+    required this.icon,
+    required this.text,
+    required this.title,
+  });
+  final IconData icon;
+  final String title;
+  final String text;
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(title),
+      iconColor: AppConstColors.subSecondary,
+      textColor: AppConstColors.subSecondary,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 16, right: 16, bottom: 12),
+          child: Text(text, style: TextTheme.of(context).labelMedium),
+        ),
+      ],
     );
   }
 }

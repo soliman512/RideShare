@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/core/widgets/default_body.dart';
 
 class RiderHomeScreen extends StatefulWidget {
-  const new({super.key, required this.fullName});
-  final String fullName;
+  const new({super.key});
 
   @override
   State<RiderHomeScreen> createState() => _RiderHomeScreenState();
@@ -27,6 +29,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return 'Hi';
   }
 
+  TextEditingController searchController = TextEditingController();
   @override
   void initState() {
     greeting = getCurrentGreeting();
@@ -34,8 +37,23 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    TextEditingController searchController = TextEditingController();
+    final authProviderWatch = context.watch<AuthProvider>();
+
+    final user = authProviderWatch.getUser;
+    String userFullName = 'Unkoun';
+    if (user == null) {
+      context.watch<LoadingProvider>().show();
+    } else {
+      context.watch<LoadingProvider>().hide();
+      userFullName = user.fullName.split(' ').take(1).join();
+    }
     return SizedBox(
       height: double.infinity,
       width: double.infinity,
@@ -45,14 +63,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             RichText(
               text: TextSpan(
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(fontSize: 18, color: AppConstColors.primaryText),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: AppConstColors.primaryText),
                 children: [
                   TextSpan(text: "$greeting, "),
                   TextSpan(
-                    text: widget.fullName,
+                    text: userFullName,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: AppConstColors.accent,
                     ),
@@ -71,10 +88,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             ),
             Text(
               "Find a ride to your destination.",
-              style: Theme.of(context).textTheme.bodyLarge
+              style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: Colors.grey),
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 28),
             //search field
             TextField(
               controller: searchController,
@@ -84,16 +101,16 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               // onChanged: onChange,
               // obscureText: obscureText,
               cursorColor: AppConstColors.subSecondary,
-              style: Theme.of(context).textTheme.titleMedium
+              style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(color: AppConstColors.primaryText),
-              textAlign: .center,
+              textAlign: .start,
               decoration: InputDecoration(
                 hintText: "ex. New Cairo",
                 labelText: "\t\tSearch\t\t",
-                prefixIcon: Icon(
-                  Remix.map_pin_2_fill,
-                  color: AppConstColors.primaryText,
-                ),
+                // prefixIcon: Icon(
+                //   Remix.map_pin_2_fill,
+                //   color: AppConstColors.primaryText,
+                // ),
                 suffixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: IconButton(

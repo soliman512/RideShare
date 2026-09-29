@@ -44,9 +44,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? localId = prefs.getString(AppStorageKeys.userId);
+      bool? userCanBecomeDriver = prefs.getBool(AppStorageKeys.canBecomeDriver);
       UserModel user = usersTable.firstWhere((user) => user.id == localId);
       if (!mounted) return;
       context.read<AuthProvider>().setUser = user;
+      context.read<AuthProvider>().setCanBecomeDriver = userCanBecomeDriver ?? false;
     } catch (e, stackTrace) {
       // ignore: avoid_print
       print('getUserModel error: $e');

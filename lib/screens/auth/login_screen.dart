@@ -7,6 +7,7 @@ import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/extension/keyboard_status_extension.dart';
 import 'package:ride_share/core/extension/screen_size_extension.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/app_name.dart';
 import 'package:ride_share/core/widgets/app_text_form_field.dart';
@@ -41,15 +42,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void outCar() {
-    if (mounted) {
-      Future.delayed(Duration(milliseconds: 500), () {
-        setState(() {
-          // open = false;
-          carPosition = CarPosition.right;
-        });
-      });
-    }
+  Future<void> outCar() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return;
+
+    setState(() {
+      carPosition = CarPosition.right;
+    });
   }
 
   @override
@@ -209,15 +209,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         AppMainButton(
                           onPressed: () async {
                             if (formState.currentState!.validate()) {
+                              context.read<LoadingProvider>().show();
                               context.read<AuthProvider>().setUserEmail =
                                   emailController.text;
-                              outCar();
+                              await outCar();
 
                               await Future.delayed(
                                 const Duration(milliseconds: 1100),
                               );
 
                               if (!context.mounted) return;
+                              context.read<LoadingProvider>().hide();
+
                               Navigator.pushNamed(
                                 context,
                                 AppRoutes.verifyOtpScreen,

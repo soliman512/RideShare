@@ -1,10 +1,11 @@
-import 'package:ride_share/core/models/driver_profile_model.dart';
+import 'package:ride_share/core/models/driver_model.dart';
 import 'package:ride_share/core/models/user_model.dart';
 import 'package:ride_share/core/models/vehicle_model.dart';
 
 enum RideStatus { active, cancelled, full, completed }
 
 class RideModel {
+  final String id;
   final String from;
   final String destination;
   final DateTime departureDate;
@@ -15,7 +16,7 @@ class RideModel {
   final double distance;
 
   // Driver
-  final DriverProfileModel driver;
+  final DriverModel driver;
   //riders
   final List<UserModel> riders;
 
@@ -26,6 +27,7 @@ class RideModel {
   final RideStatus status;
 
   const RideModel({
+    required this.id,
     required this.from,
     required this.destination,
     required this.departureDate,
