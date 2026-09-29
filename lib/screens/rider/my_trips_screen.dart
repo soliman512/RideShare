@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/models/driver_profile_model.dart';
-import 'package:rider_share/core/models/ride_model.dart';
-import 'package:rider_share/core/models/user_model.dart';
-import 'package:rider_share/core/models/vehicle_model.dart';
-import 'package:rider_share/core/providers/auth_provider.dart';
-import 'package:rider_share/core/widgets/default_body.dart';
-import 'package:rider_share/core/widgets/my_trips_ride_card.dart';
-import 'package:rider_share/core/widgets/rides_filter_chip.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/models/driver_profile_model.dart';
+import 'package:ride_share/core/models/ride_model.dart';
+import 'package:ride_share/core/models/user_model.dart';
+import 'package:ride_share/core/models/vehicle_model.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/widgets/default_body.dart';
+import 'package:ride_share/core/widgets/my_trips_ride_card.dart';
+import 'package:ride_share/core/widgets/rides_filter_chip.dart';
 
 final UserModel driverUser1 = UserModel(
   id: 'user_driver_1',

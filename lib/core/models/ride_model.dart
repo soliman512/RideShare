@@ -1,6 +1,6 @@
-import 'package:rider_share/core/models/driver_profile_model.dart';
-import 'package:rider_share/core/models/user_model.dart';
-import 'package:rider_share/core/models/vehicle_model.dart';
+import 'package:ride_share/core/models/driver_profile_model.dart';
+import 'package:ride_share/core/models/user_model.dart';
+import 'package:ride_share/core/models/vehicle_model.dart';
 
 enum RideStatus { active, cancelled, full, completed }
 

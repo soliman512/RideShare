@@ -1,7 +1,7 @@
-
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/models/ride_model.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/models/ride_model.dart';
 import 'package:flutter/material.dart';
+
 class RideStatusFilterChip extends StatelessWidget {
   const RideStatusFilterChip({
     super.key,
@@ -48,4 +48,3 @@ class RideStatusFilterChip extends StatelessWidget {
     );
   }
 }
-

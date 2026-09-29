@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/models/ride_model.dart';
-import 'package:rider_share/core/widgets/app_button.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/models/ride_model.dart';
+import 'package:ride_share/core/widgets/app_button.dart';
 
 class RideCardDriverHome extends StatelessWidget {
   const RideCardDriverHome({super.key, required this.rideData});

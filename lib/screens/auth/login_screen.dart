@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/constants/app_routes.dart';
-import 'package:rider_share/core/extension/app_extensions.dart';
-import 'package:rider_share/core/widgets/app_button.dart';
-import 'package:rider_share/core/widgets/app_name.dart';
-import 'package:rider_share/core/widgets/app_text_form_field.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/extension/keyboard_status_extension.dart';
+import 'package:ride_share/core/extension/screen_size_extension.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/widgets/app_button.dart';
+import 'package:ride_share/core/widgets/app_name.dart';
+import 'package:ride_share/core/widgets/app_text_form_field.dart';
 
 enum CarPosition { left, center, right }
 
@@ -56,13 +59,21 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final isKeyboardOpen = context.isKeyboardOpen;
+    // bool isLoading = false;
     return Scaffold(
       // resizeToAvoidBottomInset: false,
       body: Stack(
         alignment: .bottomCenter,
         children: [
+          //background
           Image.asset(
             AppConstImages.welcomeBackground,
             fit: .cover,
@@ -72,12 +83,17 @@ class _LoginScreenState extends State<LoginScreen> {
           // main box
           AnimatedPositioned(
             duration: Duration(milliseconds: 800),
+            left: 0,
+            right: 0,
             bottom: open ? 0 : -context.screenHeight * .7,
-            child: Container(
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 800),
               clipBehavior: .none,
               padding: .all(20),
               width: context.screenWidth,
-              height: context.screenHeight * .7,
+              constraints: BoxConstraints(
+                minHeight: context.screenHeight * .64,
+              ),
               decoration: BoxDecoration(
                 color: AppConstColors.primary,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -122,10 +138,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                         if (loadingProgress == null) {
                                           return child;
                                         }
-                                        return const SizedBox();
+                                        return const SizedBox.shrink();
                                       },
                                   errorBuilder: (context, error, stackTrace) {
-                                    return const SizedBox();
+                                    return const SizedBox.shrink();
                                   },
                                 ),
                               ),
@@ -139,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               textAlign: .start,
                             ),
-                            const Spacer(),
+                            // const Spacer(),
                             // TextButton(
                             //   onPressed: () {},
                             //   child: Text(
@@ -180,8 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return "ⓘ Email address is required";
-                              } else if (!value.contains("@") ||
-                                  !value.contains(".com")) {
+                              } else if (!value.contains("@")) {
                                 return "ⓘ use a valid email address";
                               } else {
                                 return null;
@@ -191,27 +206,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
                         // send code button
-                        SizedBox(
-                          width: double.infinity,
-                          child: AppMainButton(
-                            onPressed: () async {
-                              if (formState.currentState!.validate()) {
-                                outCar();
+                        AppMainButton(
+                          onPressed: () async {
+                            if (formState.currentState!.validate()) {
+                              context.read<AuthProvider>().setUserEmail =
+                                  emailController.text;
+                              outCar();
 
-                                await Future.delayed(
-                                  const Duration(milliseconds: 1100),
-                                );
+                              await Future.delayed(
+                                const Duration(milliseconds: 1100),
+                              );
 
-                                if (!context.mounted) return;
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.verifyOtpScreen,
-                                );
-                              }
-                            },
-                            title: "Send Code",
-                            icon: Remix.send_ins_fill,
-                          ),
+                              if (!context.mounted) return;
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.verifyOtpScreen,
+                              );
+                            }
+                          },
+                          title: "Send Code",
+                          icon: Remix.send_ins_fill,
                         ),
                         const SizedBox(height: 20),
                         // note

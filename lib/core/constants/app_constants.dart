@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 abstract class AppConstImages {
   static const String _path = "assets/images";
   static const String appLogo = "$_path/logo/app_logo.png";
-  static const String doodles = "$_path/illustration/rideshare_doodles.png";
+  static const String doodles = "$_path/illustration/ride_share_doodles.png";
   static const String car = "$_path/illustration/car.png";
   static const String welcomeBackground =
       "$_path/illustration/login_background.png";
@@ -11,8 +11,7 @@ abstract class AppConstImages {
       "$_path/illustration/rider_home_centeral_shape.png";
   static const String noNotificationsYet =
       "$_path/illustration/no_notifications_yet.png";
-  static const String notFoundYet =
-      "$_path/illustration/not_found_yet.png";
+  static const String notFoundYet = "$_path/illustration/not_found_yet.png";
   static const String splashScreenBackground =
       "$_path/illustration/splash_screen_background.png";
 
@@ -42,4 +41,18 @@ abstract class AppConstColors {
 
   static const Color error = Color(0xFFE40606);
   static const Color approved = Color(0xFF099340);
+}
+
+class AppStorageKeys {
+  static const String userId = 'user_id';
+
+  static const String userEmail = 'user_email';
+
+  static const String userFullName = 'user_full_name';
+
+  static const String userPhone = 'user_phone';
+
+  static const String isLoggedIn = 'is_logged_in';
+
+  static const String canBecomeDriver = 'can_become_driver';
 }

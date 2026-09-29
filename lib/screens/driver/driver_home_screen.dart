@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/constants/app_routes.dart';
-import 'package:rider_share/core/models/ride_model.dart';
-import 'package:rider_share/core/widgets/app_button.dart';
-import 'package:rider_share/core/widgets/custom_divider.dart';
-import 'package:rider_share/core/widgets/driver_home_ride_card.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/models/ride_model.dart';
+import 'package:ride_share/core/widgets/app_button.dart';
+import 'package:ride_share/core/widgets/custom_divider.dart';
+import 'package:ride_share/core/widgets/driver_home_ride_card.dart';
 
 class DriverHomeScreen extends StatelessWidget {
   const new({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<RideModel> rides = [
-     
-    ];
+    final List<RideModel> rides = [];
 
     return SingleChildScrollView(
       child: Column(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
 
 class AppTextFormField extends StatelessWidget {
   const AppTextFormField({
@@ -68,13 +68,10 @@ class AppTextFormField extends StatelessWidget {
         labelText: labelText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        hintStyle: GoogleFonts.outfit(
-          color: const Color.fromARGB(255, 143, 143, 143),
-          fontWeight: .w300,
-          fontSize: 14,
-        ),
-        labelStyle: Theme.of(context).textTheme.labelLarge!
-            .copyWith(color: AppConstColors.secondary),
+        hintStyle: TextTheme.of(context).labelLarge!
+            .copyWith(color: AppConstColors.secondaryText),
+        labelStyle: Theme.of(context).textTheme.labelMedium!
+            .copyWith(color: AppConstColors.secondaryText),
         filled: true,
         fillColor: AppConstColors.surface,
 

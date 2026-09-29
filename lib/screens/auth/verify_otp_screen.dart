@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/constants/app_routes.dart';
-import 'package:rider_share/core/widgets/app_button.dart';
-import 'package:rider_share/core/widgets/app_text_form_field.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/widgets/app_button.dart';
+import 'package:ride_share/core/widgets/app_text_form_field.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   const VerifyOtpScreen({super.key});
@@ -55,6 +57,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final String? userEmail = context.watch<AuthProvider>().userEmail;
     return Scaffold(
       body: Padding(
         padding: const .all(20),
@@ -105,7 +108,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  "Enter the 6-digit code sent to\nuser@example.com",
+                  "Enter the 6-digit code sent to\n ${userEmail ?? "email@example.com"}",
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     color: AppConstColors.secondaryText,
@@ -138,7 +141,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           },
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return '*';
+                              return ' *';
                             } else {
                               return null;
                             }

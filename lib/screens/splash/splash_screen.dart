@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/constants/app_routes.dart';
-import 'package:rider_share/core/widgets/app_name.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/widgets/app_name.dart';
 
 class SplashScreen extends StatefulWidget {
   const new({super.key});

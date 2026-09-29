@@ -1,4 +1,4 @@
-import 'package:rider_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
 
 class UserModel {
   const UserModel({

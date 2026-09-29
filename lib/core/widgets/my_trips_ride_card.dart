@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/models/ride_model.dart';
-import 'package:rider_share/core/widgets/custom_divider.dart';
-import 'package:rider_share/core/widgets/user_avatar.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/models/ride_model.dart';
+import 'package:ride_share/core/widgets/custom_divider.dart';
+import 'package:ride_share/core/widgets/user_avatar.dart';
 
 class RideCardMyTrips extends StatefulWidget {
   const RideCardMyTrips({super.key, required this.rideData});
@@ -333,7 +333,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                               fontWeight: .bold,
                             ),
                         children: [
-                          const TextSpan(text: "148.5 "),
+                          const TextSpan(text: "148.5"),
                           TextSpan(
                             text: "EGP",
                             style: TextStyle(

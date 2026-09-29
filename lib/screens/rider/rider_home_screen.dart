@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/widgets/default_body.dart';
 
-import '../../core/widgets/default_body.dart';
+class RiderHomeScreen extends StatefulWidget {
+  const new({super.key, required this.fullName});
+  final String fullName;
 
-class RiderHomeScreen extends StatelessWidget {
-  const new({super.key});
+  @override
+  State<RiderHomeScreen> createState() => _RiderHomeScreenState();
+}
+
+class _RiderHomeScreenState extends State<RiderHomeScreen> {
+  String greeting = 'Hi';
+
+  String getCurrentGreeting() {
+    int currentTimeHour = DateTime.now().hour;
+    switch (currentTimeHour) {
+      case >= 5 && < 12:
+        return 'Good Morning';
+      case >= 12 && < 18:
+        return 'Good Afternoon';
+      case >= 18 && < 24:
+        return 'Good Evening';
+    }
+    return 'Hi';
+  }
+
+  @override
+  void initState() {
+    greeting = getCurrentGreeting();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
@@ -21,9 +48,9 @@ class RiderHomeScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyLarge
                     ?.copyWith(fontSize: 18, color: AppConstColors.primaryText),
                 children: [
-                  const TextSpan(text: "Good Morning, "),
+                  TextSpan(text: "$greeting, "),
                   TextSpan(
-                    text: "soliman",
+                    text: widget.fullName,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,

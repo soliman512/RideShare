@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/constants/app_routes.dart';
-import 'package:rider_share/core/widgets/app_button.dart';
-import 'package:rider_share/core/widgets/app_text_form_field.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/data/generate_id.dart';
+import 'package:ride_share/core/data/mock_database.dart';
+import 'package:ride_share/core/models/user_model.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/loading_provider.dart';
+import 'package:ride_share/core/widgets/app_button.dart';
+import 'package:ride_share/core/widgets/app_text_form_field.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -25,9 +32,67 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
+  /// user model
+  ///  final String id;
+  // final String fullName;
+  // final String email;
+  // final String? phone;
+  // final UserMode currentMode;
+  // final DateTime createdAt;
+
+  Future<void> getUserModel() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? localId = prefs.getString(AppStorageKeys.userId);
+      UserModel user = usersTable.firstWhere((user) => user.id == localId);
+      if (!mounted) return;
+      context.read<AuthProvider>().setUser = user;
+    } catch (e, stackTrace) {
+      // ignore: avoid_print
+      print('getUserModel error: $e');
+      // ignore: avoid_print
+      print(stackTrace);
+    }
+  }
+
+  Future<void> saveUserProfileData({
+    required String userFullName,
+    required String id,
+    required String email,
+    String? phoneNumber,
+    required bool isLoggedIn,
+  }) async {
+    //save user data in mock database
+    usersTable.add(
+      UserModel(
+        id: id,
+        email: email.trim(),
+        fullName: userFullName.trim(),
+        phone: phoneNumber?.trim(),
+        createdAt: DateTime.now(),
+      ),
+    );
+    context.read<LoadingProvider>().show();
+
+    //save user data and is logged state locally
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(AppStorageKeys.userId, id.trim());
+
+    await prefs.setBool(AppStorageKeys.isLoggedIn, isLoggedIn);
+
+    await prefs.setBool(AppStorageKeys.canBecomeDriver, false);
+    await getUserModel();
+    if (!mounted) return;
+    context.read<LoadingProvider>().hide();
+    Navigator.pushReplacementNamed(context, AppRoutes.mainScaffold);
+  }
+
+  ValueNotifier<String> userAvatar = ValueNotifier<String>("");
   @override
   Widget build(BuildContext context) {
-    ValueNotifier<String> userAvatar = ValueNotifier<String>("");
+    final String? userEmail = context.watch<AuthProvider>().userEmail;
+
     return Scaffold(
       body: Padding(
         padding: const .all(20),
@@ -111,7 +176,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       //fullName
                       AppTextFormField(
                         controller: fullName,
-
                         inputAction: .next,
                         keyboardType: .text,
                         onChange: (value) {
@@ -174,9 +238,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 AppMainButton(
                   onPressed: () {
                     if (formState.currentState!.validate()) {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        AppRoutes.mainScaffold,
+                      context.read<AuthProvider>().setUserFullName =
+                          fullName.text;
+                      context.read<AuthProvider>().setUserPhoneNumber =
+                          phoneNumber.text;
+                      saveUserProfileData(
+                        userFullName: fullName.text,
+                        id: generateId(),
+                        phoneNumber: phoneNumber.text,
+                        email: userEmail ?? "userEmail@notfound.error",
+                        isLoggedIn: true,
                       );
                     }
                   },

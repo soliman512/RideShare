@@ -1,4 +1,4 @@
-# RideShare 🚗
+# ride_share 🚗
 
 **Share the ride. Split the cost.**
 
@@ -27,7 +27,7 @@ Built with **Flutter** (frontend) and **Supabase** (backend: PostgreSQL + PostGI
 
 ## Overview
 
-Daily commuters in Cairo spend significant money on fuel, tolls, and car maintenance, while public transport is often overcrowded or unavailable for specific routes. RideShare lets drivers offer seats on their daily commute and split the cost with riders traveling along the same route, using real road-distance fare splitting rather than flat pricing.
+Daily commuters in Cairo spend significant money on fuel, tolls, and car maintenance, while public transport is often overcrowded or unavailable for specific routes. ride_share lets drivers offer seats on their daily commute and split the cost with riders traveling along the same route, using real road-distance fare splitting rather than flat pricing.
 
 ## Key Features
 
@@ -139,7 +139,7 @@ PostgreSQL on Supabase with the **PostGIS** extension enabled for GPS proximity 
 ## Project Structure
 
 ```
-rideshare_flutter/
+ride_share_flutter/
   lib/
     main.dart
     constants/
@@ -211,7 +211,7 @@ rideshare_flutter/
 
 ```bash
 git clone <this-repo-url>
-cd rideshare_flutter
+cd ride_share_flutter
 flutter pub get
 ```
 

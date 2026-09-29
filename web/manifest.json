@@ -1,6 +1,6 @@
 {
-    "name": "rider_share",
-    "short_name": "rider_share",
+    "name": "ride_share",
+    "short_name": "ride_share",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

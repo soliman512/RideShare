@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
 
 class AppMainButton extends StatelessWidget {
   const AppMainButton({

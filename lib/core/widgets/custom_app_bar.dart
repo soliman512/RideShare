@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:rider_share/core/constants/app_constants.dart';
-import 'package:rider_share/core/constants/app_routes.dart';
-import 'package:rider_share/core/providers/auth_provider.dart';
-import 'package:rider_share/core/providers/current_page_provider.dart';
-import 'package:rider_share/core/widgets/app_name.dart';
+import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/current_page_provider.dart';
+import 'package:ride_share/core/widgets/app_name.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const new({super.key, required this.isThereNotifications});
