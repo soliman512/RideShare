@@ -64,10 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = context.isKeyboardOpen;
-    // bool isLoading = false;
     return Scaffold(
       // resizeToAvoidBottomInset: false,
       body: Stack(
@@ -207,9 +207,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 20),
                         // send code button
                         AppMainButton(
+                          isLoading: isLoading,
                           onPressed: () async {
                             if (formState.currentState!.validate()) {
-                              context.read<LoadingProvider>().show();
+                              // context.read<LoadingProvider>().show()
+                              setState(() {
+                                isLoading = true;
+                              });
                               context.read<AuthProvider>().setUserEmail =
                                   emailController.text;
                               await outCar();
@@ -225,6 +229,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 context,
                                 AppRoutes.verifyOtpScreen,
                               );
+                              setState(() {
+                                isLoading = false;
+                              });
                             }
                           },
                           title: "Send Code",

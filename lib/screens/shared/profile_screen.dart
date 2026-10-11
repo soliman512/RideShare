@@ -1,12 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_constants.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/data/mock_database.dart';
 import 'package:ride_share/core/models/setting_tile_model.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
+import 'package:ride_share/core/widgets/app_text_form_field.dart';
 import 'package:ride_share/core/widgets/user_avatar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -20,28 +26,108 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  //get app info:
+  GlobalKey<FormState> formState = GlobalKey<FormState>();
+  final GlobalKey<FormState> driverFormKey = GlobalKey<FormState>();
+  final TextEditingController idCardUrlController = TextEditingController();
+  final TextEditingController criminalRecordUrlController =
+      TextEditingController();
   String? appName;
 
   String? appVersion;
+  bool messages = true;
+  bool rideRequests = true;
+
+  bool showBecomeDriverForm = false;
+  late TextEditingController userNewFullNameController;
+  late TextEditingController userNewPhoneNumberContoller;
+
+  final ImagePicker imagePicker = ImagePicker();
+  XFile? idCard;
+  XFile? criminalRecord;
+
+  Future<void> saveUserNewData() async {
+    final loadingProvider = context.read<LoadingProvider>();
+    final authProvider = context.read<AuthProvider>();
+
+    loadingProvider.show();
+
+    try {
+      final userId = authProvider.getUser!.id;
+
+      for (final user in usersTable) {
+        if (user.id != userId) continue;
+        //will work one time
+        final newFullName = userNewFullNameController.text.trim();
+        final newPhoneNumber = userNewPhoneNumberContoller.text.trim();
+
+        if (newFullName.isNotEmpty) {
+          user.fullName = newFullName;
+          authProvider.setUserFullName = newFullName;
+        }
+
+        if (newPhoneNumber.isNotEmpty) {
+          user.phone = newPhoneNumber;
+          authProvider.setUserPhoneNumber = newPhoneNumber;
+        }
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Your profile has been updated successfully.',
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: AppConstColors.white),
+            ),
+            backgroundColor: AppConstColors.approved,
+          ),
+        );
+
+        return;
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('there is problem, try again later.')),
+      );
+    } catch (e) {
+      debugPrint('Failed to update profile: $e');
+    } finally {
+      userNewFullNameController.clear();
+      userNewPhoneNumberContoller.clear();
+      loadingProvider.hide();
+    }
+  }
 
   Future<void> getAppInfo() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    appName = packageInfo.appName;
-    appVersion = packageInfo.version;
-    setState(() {});
+    setState(() {
+      appName = packageInfo.appName;
+      appVersion = packageInfo.version;
+    });
   }
+
+  void submitDriverApplication() {}
 
   @override
   void initState() {
-    getAppInfo();
     super.initState();
+    userNewFullNameController = TextEditingController();
+    userNewPhoneNumberContoller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    userNewFullNameController.dispose();
+    userNewPhoneNumberContoller.dispose();
+    idCardUrlController.dispose();
+    criminalRecordUrlController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    bool messages = true;
-    bool rideRequests = true;
     final String userFullName = context.watch<AuthProvider>().getUser!.fullName;
     final String userEmail = context.watch<AuthProvider>().getUser!.email;
     final String userPhone =
@@ -53,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool canBecomeDriver =
         context.read<AuthProvider>().canBecomeDriver ?? false;
 
-    ///actions items
+    //actions items
     final List<ProfileItemModel> profileSettings = [
       // Account Settings
       // ─────────────────────────────────────────────
@@ -77,7 +163,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     tooltip: 'Edit profile',
                     onPressed: () {
                       Navigator.pop(context);
-
                       showAppModalSheet(
                         context,
                         children: [
@@ -91,21 +176,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
 
                           const SizedBox(height: 16),
+                          Form(
+                            key: formState,
+                            child: Column(
+                              spacing: 12,
+                              children: [
+                                AppTextFormField(
+                                  controller: userNewFullNameController,
+                                  inputAction: .done,
+                                  hintText: userFullName,
+                                  labelText: 'new full name',
+                                  prefixIcon: Icon(Remix.user_line),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'ⓘ Full name is required';
+                                    }
 
-                          TextFormField(
-                            initialValue: userFullName,
-                            decoration: const InputDecoration(
-                              labelText: 'Full Name',
-                              prefixIcon: Icon(Remix.user_line),
-                            ),
-                          ),
+                                    return null;
+                                  },
+                                ),
 
-                          TextFormField(
-                            initialValue: userPhone,
-                            keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone Number',
-                              prefixIcon: Icon(Remix.phone_line),
+                                AppTextFormField(
+                                  controller: userNewPhoneNumberContoller,
+                                  keyboardType: TextInputType.phone,
+                                  inputAction: .done,
+                                  maxLength: 11,
+                                  hintText: userPhone,
+                                  labelText: 'new phone number',
+                                  prefixIcon: Icon(Remix.phone_line),
+                                  validator: (value) {
+                                    final phone = value?.trim() ?? '';
+
+                                    if (phone.isEmpty) {
+                                      return null;
+                                    }
+
+                                    if (!phone.startsWith('010') &&
+                                        !phone.startsWith('011') &&
+                                        !phone.startsWith('012') &&
+                                        !phone.startsWith('015')) {
+                                      return 'ⓘ Please enter a valid phone number';
+                                    }
+
+                                    if (phone.length != 11) {
+                                      return 'ⓘ Please enter a valid phone number';
+                                    }
+
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ),
                           ),
 
@@ -115,8 +235,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: double.infinity,
                             child: AppMainButton(
                               onPressed: () {
-                                // Save profile changes
-                                Navigator.pop(context);
+                                if (formState.currentState!.validate()) {
+                                  if (userNewFullNameController
+                                          .text
+                                          .isNotEmpty ||
+                                      userNewPhoneNumberContoller
+                                          .text
+                                          .isNotEmpty) {
+                                    saveUserNewData();
+                                  }
+                                  Navigator.pop(context);
+                                }
                               },
                               title: 'Save Changes',
                               icon: Remix.save_line,
@@ -245,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Remix.question_line,
         title: 'Help & FAQ',
         subtitle: 'Get help and find answers',
-        onTap: () {
+        onTap: () async {
           showAppModalSheet(
             context,
             children: [
@@ -296,6 +425,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: 'About RideShare',
         subtitle: 'Learn more about the app',
         onTap: () {
+          getAppInfo();
+
           showAppModalSheet(
             context,
             children: [
@@ -346,6 +477,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       ),
     ];
+
     return SingleChildScrollView(
       child: Column(
         spacing: 12,
@@ -353,60 +485,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           // user data (user model)
           Container(
-            padding: .all(12),
-            // height: context.screenHeight * .14,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: .circular(20),
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppConstColors.subSecondary, AppConstColors.secondary],
+              ),
               boxShadow: [
                 BoxShadow(
                   color: AppConstColors.shadow,
-                  offset: Offset(0, 4),
-                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                  blurRadius: 6,
                 ),
               ],
-              gradient: LinearGradient(
-                colors: [AppConstColors.subSecondary, AppConstColors.secondary],
-              ),
             ),
-            child: Row(
-              mainAxisAlignment: .spaceAround,
-              crossAxisAlignment: .center,
-              // spacing: 12,
+            child: Column(
+              spacing: 8,
               children: [
-                UserAvatar(name: userFullName, fontSize: 30),
-                Column(
-                  mainAxisAlignment: .spaceEvenly,
-                  crossAxisAlignment: .start,
-                  spacing: 4,
+                // Avatar + Name + email
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: UserAvatar(name: userFullName, fontSize: 24),
+                  title: Text(
+                    userFullName.isNotEmpty ? userFullName : 'Not added',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppConstColors.white,
+                    ),
+                  ),
+                  subtitle: Text(
+                    userEmail.isNotEmpty ? userEmail : 'Not added',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppConstColors.accent,
+                      // fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // phone number + roles
+                Row(
+                  spacing: 8,
                   children: [
-                    ProfileInfoItem(
-                      icon: Remix.user_5_fill,
-                      text: userFullName,
-                    ),
-                    ProfileInfoItem(
-                      icon: Remix.mail_line,
-                      text: userEmail,
-                      primary: false,
-                    ),
-                    if (userPhone.isNotEmpty)
-                      ProfileInfoItem(
-                        icon: Remix.phone_line,
-                        text: userPhone,
-                        primary: false,
+                    Expanded(
+                      child: ProfileInfoItem(
+                        icon: Remix.phone_fill,
+                        text: userPhone.isNotEmpty ? userPhone : 'Not added',
                       ),
-                    ProfileInfoItem(
-                      icon: Remix.calendar_event_line,
-                      text: DateFormat(DateFormat.YEAR_MONTH_DAY)
-                          .format(userSinceDate),
-                      primary: false,
+                    ),
+
+                    Expanded(
+                      child: ProfileInfoItem(
+                        icon: canBecomeDriver
+                            ? Remix.car_fill
+                            : Remix.user_fill,
+                        text: 'Rider ${canBecomeDriver ? '| Driver' : ''}',
+                      ),
                     ),
                   ],
                 ),
+                // account created at
+                ProfileInfoItem(
+                  icon: Remix.calendar_event_fill,
+                  text: DateFormat(DateFormat.YEAR_MONTH_DAY)
+                      .format(userSinceDate),
+                ),
               ],
             ),
-          ),
-          //driver data
-          Container(
+          ), //driver data
+          AnimatedContainer(
+            duration: Duration(milliseconds: 2000),
+            curve: Curves.easeInOut,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               // color: AppConstColors.white,
@@ -473,57 +626,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Requirements
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Remix.information_line,
-                      color: AppConstColors.subSecondary,
-                      size: 19,
-                    ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  child: showBecomeDriverForm
+                      ? Form(
+                          key: driverFormKey,
+                          child: Column(
+                            spacing: 14,
+                            children: [
+                              Row(
+                                spacing: 12,
+                                children: [
+                                  //id card front face
+                                  Expanded(
+                                    child: UploadSection(
+                                      icon: Remix.id_card_fill,
+                                      title: 'ID card\n(front face)',
+                                      image: idCard != null
+                                          ? Image.file(
+                                              File(idCard!.path),
+                                              fit: .cover,
+                                            )
+                                          : null,
 
-                    const SizedBox(width: 9),
+                                      onTap: () async {
+                                        context.read<LoadingProvider>().show();
+                                        idCard = await imagePicker.pickImage(
+                                          source: ImageSource.gallery,
+                                        );
+                                        if (!mounted) return;
+                                        context.read<LoadingProvider>().hide();
+                                        setState(() {});
+                                      },
+                                    ),
+                                  ),
+                                  //criminal record
+                                  Expanded(
+                                    child: UploadSection(
+                                      icon: Remix.file_paper_fill,
+                                      title: 'criminal\nrecord',
+                                      image: criminalRecord != null
+                                          ? Image.file(
+                                              File(criminalRecord!.path),
+                                              fit: .cover,
+                                            )
+                                          : null,
+                                      onTap: () async {
+                                        context.read<LoadingProvider>().show();
 
-                    Expanded(
-                      child: Text(
-                        'You’ll need to provide your personal and vehicle information.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                          height: 1.5,
+                                        criminalRecord = await imagePicker
+                                            .pickImage(
+                                              source: ImageSource.gallery,
+                                            );
+                                        if (!mounted) return;
+                                        context.read<LoadingProvider>().hide();
+                                        setState(() {});
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                spacing: 12,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Back',
+                                    onPressed: () {
+                                      criminalRecord = null;
+                                      idCard = null;
+                                      setState(() {
+                                        showBecomeDriverForm = false;
+                                      });
+                                    },
+                                    icon: const Icon(Remix.arrow_left_line),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: AppMainButton(
+                                      onPressed: submitDriverApplication,
+                                      title: 'Submit',
+                                      mainColor: AppConstColors.accent,
+
+                                      icon: Remix.send_plane_line,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Remix.information_line,
+                              color: AppConstColors.subSecondary,
+                              size: 19,
+                            ),
+
+                            const SizedBox(width: 9),
+
+                            Expanded(
+                              child: Text(
+                                'You’ll need to provide your personal and vehicle information.',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Colors.grey.shade600,
+                                      height: 1.5,
+                                    ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
                 ),
 
                 const SizedBox(height: 18),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () {},
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppConstColors.accent,
-                      foregroundColor: AppConstColors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Register as a Driver',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                if (!showBecomeDriverForm)
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        setState(() {
+                          showBecomeDriverForm = true;
+                        });
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppConstColors.accent,
+                        foregroundColor: AppConstColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Remix.arrow_right_line, size: 19),
-                      ],
+                        elevation: 0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Register as a Driver',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Remix.arrow_right_line, size: 19),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -621,13 +871,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainColor: AppConstColors.error,
             isOutlined: true,
           ),
-          //app version
-          Text(
-            "$appName \t v$appVersion",
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: Colors.grey, fontWeight: FontWeight.w300),
-            textAlign: TextAlign.center,
-          ),
+
           const SizedBox(height: 10),
         ],
       ),
@@ -664,34 +908,81 @@ class HelpExpansionTile extends StatelessWidget {
 }
 
 class ProfileInfoItem extends StatelessWidget {
-  const new({
-    super.key,
-    required this.text,
-    required this.icon,
-    this.primary = true,
-  });
+  const new({super.key, required this.text, required this.icon});
   final String text;
   final IconData icon;
-  final bool primary;
   @override
   Widget build(BuildContext context) {
-    return Row(
-      spacing: 8,
-      children: [
-        Icon(
-          icon,
-          color: primary ? Colors.white : Colors.white.withValues(alpha: .8),
-          size: 16,
-        ),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: primary ? Colors.white : Colors.white.withValues(alpha: .8),
-            fontSize: primary ? 16 : 14,
-            fontWeight: primary ? FontWeight.bold : FontWeight.w300,
+    return Container(
+      padding: .all(4),
+      alignment: .center,
+      decoration: BoxDecoration(
+        color: AppConstColors.white.withValues(alpha: .2),
+        borderRadius: .circular(20),
+      ),
+      child: Row(
+        mainAxisAlignment: .center,
+        spacing: 8,
+        children: [
+          Icon(icon, color: AppConstColors.accent, size: 16),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: .center,
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: AppConstColors.white, fontSize: 12),
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class UploadSection extends StatelessWidget {
+  const UploadSection({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.image,
+    super.key,
+  });
+
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final Widget? image;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: BoxConstraints(maxHeight: 120, minHeight: 120),
+        clipBehavior: .antiAlias,
+        padding: image != null ? .zero : const .all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: AppConstColors.white.withValues(alpha: .3),
+          border: .all(color: AppConstColors.secondary, width: .3),
         ),
-      ],
+        child:
+            image ??
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 8,
+              mainAxisAlignment: .center,
+              children: [
+                Icon(icon, size: 28, color: AppConstColors.secondary),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+      ),
     );
   }
 }

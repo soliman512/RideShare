@@ -1,7 +1,7 @@
 import 'package:ride_share/core/providers/auth_provider.dart';
 
 class UserModel {
-  const UserModel({
+  UserModel({
     required this.id,
     required this.fullName,
     required this.email,
@@ -11,9 +11,9 @@ class UserModel {
   });
 
   final String id;
-  final String fullName;
+  String fullName;
   final String email;
-  final String? phone;
+  String? phone;
   final UserMode currentMode;
   final DateTime createdAt;
 }

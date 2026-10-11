@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ride_share/core/constants/app_constants.dart';
-import 'package:ride_share/core/extension/screen_size_extension.dart';
 
 Future<void> showAppModalSheet(
   BuildContext context, {
@@ -12,36 +11,65 @@ Future<void> showAppModalSheet(
     isDismissible: true,
     showDragHandle: false,
     enableDrag: true,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppConstColors.surface,
     barrierColor: AppConstColors.primaryText.withValues(alpha: .7),
     builder: (context) {
-      return Container(
-        width: double.infinity,
-        constraints: BoxConstraints(minHeight: context.screenHeight * .25),
+      final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
 
-        padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: .center,
-            mainAxisAlignment: .center,
-            spacing: spacing,
-            children: [
-              Container(
-                width: 80,
-                height: 4,
-
-                margin: .only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(10),
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(
+          bottom: keyboardHeight,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .9,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-              ),
 
-              ...children,
-            ],
+                ..._addSpacing(
+                  children,
+                  spacing,
+                ),
+              ],
+            ),
           ),
         ),
       );
     },
   );
+}
+
+List<Widget> _addSpacing(
+  List<Widget> children,
+  double spacing,
+) {
+  return [
+    for (int i = 0; i < children.length; i++) ...[
+      if (i > 0) SizedBox(height: spacing),
+      children[i],
+    ],
+  ];
 }

@@ -19,54 +19,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
-    final List<NotificationModel> notifications = [
-      NotificationModel(
-        type: NotificationType.bookingConfirmed,
-        title: 'Booking Confirmed',
-        body: 'Your booking has been confirmed successfully.',
-        isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-
-      NotificationModel(
-        type: NotificationType.rideCancelled,
-        title: 'Ride Cancelled',
-        body: 'Your ride has been cancelled by the driver.',
-        isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      ),
-
-      NotificationModel(
-        type: NotificationType.rideCompleted,
-        title: 'Ride Completed',
-        body: 'Your ride has been completed. Thank you for riding with us!',
-        isRead: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-
-      NotificationModel(
-        type: NotificationType.reviewReceived,
-        title: 'New Review Received',
-        body: 'You received a new review from your passenger.',
-        isRead: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-
-      NotificationModel(
-        type: NotificationType.bookingConfirmed,
-        title: 'Booking Confirmed',
-        body: 'Your seat has been reserved successfully.',
-        isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      NotificationModel(
-        type: NotificationType.driverCancelled,
-        title: 'ride cancelled',
-        body: 'Your seat has been reserved successfully.',
-        isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
+    final List<NotificationModel> notifications = [  ];
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 80,
