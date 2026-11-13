@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
 
 abstract final class AppTheme {
   static ThemeData theme = ThemeData(
+    scaffoldBackgroundColor: AppConstColors.primary,
     useMaterial3: true,
     primaryColor: AppConstColors.primary,
 
@@ -12,7 +14,17 @@ abstract final class AppTheme {
       selectionColor: Color.fromARGB(136, 22, 135, 201),
       selectionHandleColor: AppConstColors.secondary,
     ),
-
+      colorScheme: ColorScheme.light(
+        primary: AppConstColors.secondary,
+        onPrimary: AppConstColors.white,
+        secondary: AppConstColors.subSecondary,
+        onSecondary: AppConstColors.white,
+        surface: AppConstColors.surface,
+        onSurface: AppConstColors.primaryText,
+        error: AppConstColors.error,
+        onError: AppConstColors.white,
+        
+      ),
     appBarTheme: AppBarTheme(
       elevation: 0,
       // Prevent color change when scrolling
@@ -23,6 +35,12 @@ abstract final class AppTheme {
 
       // Optional: Keep AppBar transparent
       shadowColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: .light,
+
+        statusBarIconBrightness: .dark,
+      ),
     ),
 
     // Default font

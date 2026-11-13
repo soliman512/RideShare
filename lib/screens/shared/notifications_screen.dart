@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/urils/app_date_formatter.dart';
 import 'package:ride_share/core/models/notification_model.dart';
 import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/core/widgets/default_body.dart';
+
 
 class NotificationsScreen extends StatefulWidget {
   const new({super.key});
@@ -19,7 +21,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
-    final List<NotificationModel> notifications = [  ];
+    final List<NotificationModel> notifications = [];
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 80,

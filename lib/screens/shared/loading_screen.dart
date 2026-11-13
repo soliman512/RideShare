@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/extension/screen_size_extension.dart';
 
 class LoadingScreen extends StatelessWidget {
@@ -8,51 +10,31 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstColors.primaryText.withValues(alpha: 0.28),
+      backgroundColor: AppConstColors.shadow.withValues(alpha: 0.28),
       body: Center(
         child: Container(
-          width: double.infinity,
-          margin: .symmetric(horizontal: context.screenWidth * .2),
-          padding: const .all(8),
+          clipBehavior: .antiAlias,
+          width: context.screenWidth * .25.w,
+          height: context.screenWidth * .25.w,
+          // margin: .symmetric(horizontal: context.screenWidth * .3),
+
+          padding: const .all(0),
           decoration: BoxDecoration(
             color: AppConstColors.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             shape: BoxShape.rectangle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 30,
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 60,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 140,
-                height: 140,
-                child: Image.asset(AppConstImages.loading, fit: .contain),
-              ),
-
-              Text(
-                'Please wait a second...',
-                textAlign: .center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppConstColors.primaryText,
-                  fontWeight: .bold,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Text(
-              //   'We are getting everything ready for you.',
-              //   textAlign: TextAlign.center,
-              //   style: Theme.of(context).textTheme.bodyMedium
-              //       ?.copyWith(color: Colors.black54, height: 1.4),
-              // ),
-            ],
+          child: SizedBox(
+            width: 100.w,
+            height: 100.w,
+            child: Image.asset(AppConstImages.loading, fit: .contain),
           ),
         ),
       ),

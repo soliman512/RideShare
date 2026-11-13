@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/models/ride_model.dart';
 import 'package:ride_share/core/widgets/custom_divider.dart';
 import 'package:ride_share/core/widgets/user_avatar.dart';
+
 
 class RideCardMyTrips extends StatefulWidget {
   const RideCardMyTrips({super.key, required this.rideData});

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/current_page_provider.dart';
 import 'package:ride_share/screens/driver/driver_home_screen.dart';
@@ -13,19 +13,27 @@ import 'package:ride_share/core/widgets/custom_app_bar.dart';
 
 ValueNotifier<bool> isThereNotifications = ValueNotifier<bool>(false);
 
-class MainScaffold extends StatelessWidget {
+class MainScaffold extends StatefulWidget {
   const new({super.key});
+
+  @override
+  State<MainScaffold> createState() => _MainScaffoldState();
+}
+
+class _MainScaffoldState extends State<MainScaffold> {
+  @override
+  void initState() {
+    context.read<AuthProvider>().loadUser();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     int currentPage = context.watch<CurrentPageProvider>().getCurrentPage;
     final userMode = context.watch<AuthProvider>().currentUserMode;
-   
 
     final List<Widget> pages = [
-      userMode == UserMode.rider
-          ? RiderHomeScreen()
-          : const DriverHomeScreen(),
+      userMode == UserMode.rider ? RiderHomeScreen() : const DriverHomeScreen(),
       const MyTripsScreen(),
       const ProfileScreen(),
     ];

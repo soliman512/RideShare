@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppMainButton extends StatelessWidget {
   const AppMainButton({
@@ -10,6 +11,9 @@ class AppMainButton extends StatelessWidget {
     this.isLoading = false,
     this.mainColor,
     this.isOutlined = false,
+    this.btnHeign,
+    this.btnWidth,
+    this.fontSize,
   });
 
   final IconData? icon;
@@ -18,6 +22,9 @@ class AppMainButton extends StatelessWidget {
   final bool isLoading;
   final Color? mainColor;
   final bool isOutlined;
+  final double? btnHeign;
+  final double? btnWidth;
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -25,59 +32,72 @@ class AppMainButton extends StatelessWidget {
 
     final Color contentColor = isOutlined ? buttonColor : Colors.white;
 
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
+    return SizedBox(
+      height: btnHeign ?? 50.h,
+      width: btnWidth ?? double.infinity,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
 
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isOutlined ? Colors.transparent : buttonColor,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isOutlined ? Colors.transparent : buttonColor,
 
-        foregroundColor: contentColor,
+          foregroundColor: contentColor,
 
-        // Disabled colors
-        disabledBackgroundColor: isOutlined
-            ? Colors.transparent
-            : buttonColor.withValues(alpha: .6),
+          // Disabled colors
+          disabledBackgroundColor: isOutlined
+              ? Colors.transparent
+              : buttonColor.withValues(alpha: .6),
 
-        disabledForegroundColor: contentColor.withValues(alpha: .6),
+          disabledForegroundColor: contentColor.withValues(alpha: .6),
 
-        side: isOutlined
-            ? BorderSide(color: buttonColor, width: 1.5)
-            : BorderSide.none,
+          side: isOutlined
+              ? BorderSide(color: buttonColor, width: 1.5)
+              : BorderSide.none,
 
-        padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 14),
 
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-
-        // No shadow
-        elevation: 0,
-        shadowColor: Colors.transparent,
-
-        // Press feedback
-        overlayColor: buttonColor.withValues(alpha: .12),
-      ),
-
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 12,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall!
-                .copyWith(color: contentColor, fontWeight: .w300),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
 
-          if (isLoading)
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: contentColor,
-                strokeWidth: 2,
+          // No shadow
+          elevation: 0,
+          shadowColor: Colors.transparent,
+
+          // Press feedback
+          overlayColor: buttonColor.withValues(alpha: .12),
+        ),
+
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 12,
+          children: [
+            FittedBox(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                  color: contentColor,
+                  fontWeight: .w300,
+                  fontSize: fontSize,
+                ),
               ),
-            )
-          else
-            icon != null ? Icon(icon, color: contentColor) : SizedBox.shrink(),
-        ],
+            ),
+
+            if (isLoading)
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: contentColor,
+                  strokeWidth: 2,
+                ),
+              )
+            else
+              icon != null
+                  ? Icon(icon, color: contentColor)
+                  : SizedBox.shrink(),
+          ],
+        ),
       ),
     );
   }

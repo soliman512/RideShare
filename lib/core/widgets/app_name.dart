@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
+
 
 class AppName extends StatelessWidget {
   const new({super.key, this.fontSize, this.removeR, this.fontWeight});

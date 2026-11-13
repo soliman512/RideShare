@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/models/ride_model.dart';
 import 'package:ride_share/core/widgets/app_button.dart';

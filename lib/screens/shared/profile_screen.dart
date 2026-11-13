@@ -1,22 +1,25 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/data/mock_database.dart';
+import 'package:ride_share/core/extension/english_nums_to_arabic_extension.dart';
+import 'package:ride_share/core/models/driver_model.dart';
 import 'package:ride_share/core/models/setting_tile_model.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/loading_provider.dart';
+import 'package:ride_share/core/services/auth_services.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/app_text_form_field.dart';
+import 'package:ride_share/core/widgets/custom_divider.dart';
 import 'package:ride_share/core/widgets/user_avatar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ride_share/core/widgets/show_app_modal_sheet.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class ProfileScreen extends StatefulWidget {
   const new({super.key});
@@ -26,11 +29,26 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  GlobalKey<FormState> formState = GlobalKey<FormState>();
-  final GlobalKey<FormState> driverFormKey = GlobalKey<FormState>();
-  final TextEditingController idCardUrlController = TextEditingController();
-  final TextEditingController criminalRecordUrlController =
+  GlobalKey<FormState> newUserDataFormState = GlobalKey<FormState>();
+  final GlobalKey<FormState> driverFormState = GlobalKey<FormState>();
+
+  //driver form fields
+  final TextEditingController driverCarType = TextEditingController();
+  final TextEditingController driverCarModel = TextEditingController();
+  final TextEditingController driverCarLicensePlateLetters =
       TextEditingController();
+  final TextEditingController driverCarLicensePlateNumbers =
+      TextEditingController();
+  final TextEditingController driverCarColor = TextEditingController();
+  final ImagePicker imagePicker = ImagePicker();
+  XFile? idCard;
+  XFile? criminalRecord;
+  XFile? drivingLicense;
+  XFile? newUserProfilePicture;
+  //  String? idCardFrontFaceImageUrl;
+  //  String? criminalRecordUrl;
+  //  String? drivingLicenseUrl;
+  //app info
   String? appName;
 
   String? appVersion;
@@ -38,64 +56,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool rideRequests = true;
 
   bool showBecomeDriverForm = false;
-  late TextEditingController userNewFullNameController;
-  late TextEditingController userNewPhoneNumberContoller;
-
-  final ImagePicker imagePicker = ImagePicker();
-  XFile? idCard;
-  XFile? criminalRecord;
+  TextEditingController newUserFullNameController = TextEditingController();
+  TextEditingController newUserPhoneNumberContoller = TextEditingController();
 
   Future<void> saveUserNewData() async {
     final loadingProvider = context.read<LoadingProvider>();
     final authProvider = context.read<AuthProvider>();
-
     loadingProvider.show();
 
     try {
       final userId = authProvider.getUser!.id;
-
-      for (final user in usersTable) {
-        if (user.id != userId) continue;
-        //will work one time
-        final newFullName = userNewFullNameController.text.trim();
-        final newPhoneNumber = userNewPhoneNumberContoller.text.trim();
-
-        if (newFullName.isNotEmpty) {
-          user.fullName = newFullName;
-          authProvider.setUserFullName = newFullName;
-        }
-
-        if (newPhoneNumber.isNotEmpty) {
-          user.phone = newPhoneNumber;
-          authProvider.setUserPhoneNumber = newPhoneNumber;
-        }
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Your profile has been updated successfully.',
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppConstColors.white),
-            ),
-            backgroundColor: AppConstColors.approved,
-          ),
-        );
-
-        return;
-      }
-
+      // print('===================================');
+      // print(newUserFullNameController.text);
+      // print(newUserPhoneNumberContoller.text);
+      // print(userId);
+      // print('===================================');
+      await AuthServices.updateUserData(
+        userId: userId,
+        fullName: newUserFullNameController.text,
+        phone: newUserPhoneNumberContoller.text,
+      );
       if (!mounted) return;
-
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('your data has been updated.'),
+          backgroundColor: AppConstColors.approved,
+        ),
+      );
+      context.read<AuthProvider>().loadUser();
+      setState(() {});
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('there is problem, try again later.')),
       );
-    } catch (e) {
-      debugPrint('Failed to update profile: $e');
     } finally {
-      userNewFullNameController.clear();
-      userNewPhoneNumberContoller.clear();
+      newUserFullNameController.clear();
+      newUserPhoneNumberContoller.clear();
       loadingProvider.hide();
     }
   }
@@ -108,186 +104,118 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void submitDriverApplication() {}
+  void submitDriverApplication() {
+    // print("enterd to function");
+    if (!driverFormState.currentState!.validate()) return;
+
+    // print("form check passed");
+    if (idCard == null || criminalRecord == null || drivingLicense == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please upload all required documents'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+
+      return;
+    }
+
+    drivers.add(
+      DriverModel(
+        id: '1',
+        userId: context.read<AuthProvider>().getUser!.id,
+        idCardUrl: idCard!.path,
+        criminalRecordUrl: criminalRecord!.path,
+        drivingLicenseUrl: drivingLicense!.path,
+        carType: driverCarType.text,
+        carModel: driverCarModel.text,
+        carColor: driverCarColor.text,
+        licensePlate:
+            '${driverCarLicensePlateNumbers.text}-${driverCarLicensePlateLetters.text}',
+        approvalStatus: DriverApprovalStatus.approved,
+        driverRating: 5,
+        totalRides: 0,
+      ),
+    );
+    // print("driver added");
+    // for (final driver in drivers) {
+    //   print('========== Driver Info ==========');
+    //   print('ID: ${driver.id}');
+    //   print('User ID: ${driver.userId}');
+    //   print('ID Card: ${driver.idCardUrl}');
+    //   print('Criminal Record: ${driver.criminalRecordUrl}');
+    //   print('Driving License: ${driver.drivingLicenseUrl}');
+    //   print('Car Type: ${driver.carType}');
+    //   print('Car Model: ${driver.carModel}');
+    //   print('Car Color: ${driver.carColor}');
+    //   print('License Plate: ${driver.licensePlate}');
+    //   print('Approval Status: ${driver.approvalStatus.name}');
+    //   print('Driver Rating: ${driver.driverRating}');
+    //   print('Total Rides: ${driver.totalRides}');
+    //   print('Approved At: ${driver.approvedAt}');
+    //   print('=================================');
+    // }
+    setState(() {
+      showBecomeDriverForm = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('your request sent successfully'),
+        backgroundColor: AppConstColors.approved,
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    userNewFullNameController = TextEditingController();
-    userNewPhoneNumberContoller = TextEditingController();
   }
 
   @override
   void dispose() {
-    userNewFullNameController.dispose();
-    userNewPhoneNumberContoller.dispose();
-    idCardUrlController.dispose();
-    criminalRecordUrlController.dispose();
+    newUserFullNameController.dispose();
+    newUserPhoneNumberContoller.dispose();
+    //driver form (car and driver info)
+    driverCarType.dispose();
+    driverCarModel.dispose();
+    driverCarLicensePlateNumbers.dispose();
+    driverCarLicensePlateLetters.dispose();
+    driverCarColor.dispose();
+
+    // newUserFullNameController.dispose();
+    // newUserPhoneNumberContoller.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final String userFullName = context.watch<AuthProvider>().getUser!.fullName;
-    final String userEmail = context.watch<AuthProvider>().getUser!.email;
+    final String userFullName = context.read<AuthProvider>().getUser!.fullName;
+    final String userEmail = context.read<AuthProvider>().getUser!.email;
     final String userPhone =
-        context.watch<AuthProvider>().getUser!.phone ?? 'not found';
+        context.read<AuthProvider>().getUser!.phone ?? 'not found';
+    final String? userProfilePicture = context
+        .read<AuthProvider>()
+        .getUser!
+        .profilePictureUrl;
     final DateTime userSinceDate = context
-        .watch<AuthProvider>()
+        .read<AuthProvider>()
         .getUser!
         .createdAt;
-    bool canBecomeDriver =
-        context.read<AuthProvider>().canBecomeDriver ?? false;
+    bool canBecomeDriver = context.read<AuthProvider>().canBecomeDriver;
 
     //actions items
     final List<ProfileItemModel> profileSettings = [
       // Account Settings
       // ─────────────────────────────────────────────
-      ProfileItemModel(
-        icon: Remix.user_settings_line,
-        title: 'Account Settings',
-        subtitle: 'Manage your personal information',
-        onTap: () {
-          showAppModalSheet(
-            context,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Account Settings',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Edit profile',
-                    onPressed: () {
-                      Navigator.pop(context);
-                      showAppModalSheet(
-                        context,
-                        children: [
-                          Text(
-                            'Edit Profile',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          Text(
-                            'Update your personal information.',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+      // ProfileItemModel(
+      //   icon: Remix.user_settings_line,
+      //   title: 'Account Settings',
+      //   subtitle: 'Manage your personal information',
+      //   onTap: () {
 
-                          const SizedBox(height: 16),
-                          Form(
-                            key: formState,
-                            child: Column(
-                              spacing: 12,
-                              children: [
-                                AppTextFormField(
-                                  controller: userNewFullNameController,
-                                  inputAction: .done,
-                                  hintText: userFullName,
-                                  labelText: 'new full name',
-                                  prefixIcon: Icon(Remix.user_line),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'ⓘ Full name is required';
-                                    }
-
-                                    return null;
-                                  },
-                                ),
-
-                                AppTextFormField(
-                                  controller: userNewPhoneNumberContoller,
-                                  keyboardType: TextInputType.phone,
-                                  inputAction: .done,
-                                  maxLength: 11,
-                                  hintText: userPhone,
-                                  labelText: 'new phone number',
-                                  prefixIcon: Icon(Remix.phone_line),
-                                  validator: (value) {
-                                    final phone = value?.trim() ?? '';
-
-                                    if (phone.isEmpty) {
-                                      return null;
-                                    }
-
-                                    if (!phone.startsWith('010') &&
-                                        !phone.startsWith('011') &&
-                                        !phone.startsWith('012') &&
-                                        !phone.startsWith('015')) {
-                                      return 'ⓘ Please enter a valid phone number';
-                                    }
-
-                                    if (phone.length != 11) {
-                                      return 'ⓘ Please enter a valid phone number';
-                                    }
-
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: AppMainButton(
-                              onPressed: () {
-                                if (formState.currentState!.validate()) {
-                                  if (userNewFullNameController
-                                          .text
-                                          .isNotEmpty ||
-                                      userNewPhoneNumberContoller
-                                          .text
-                                          .isNotEmpty) {
-                                    saveUserNewData();
-                                  }
-                                  Navigator.pop(context);
-                                }
-                              },
-                              title: 'Save Changes',
-                              icon: Remix.save_line,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                    icon: const Icon(Remix.edit_line),
-                  ),
-                ],
-              ),
-
-              Text(
-                'Update your personal information and account details.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Remix.user_line),
-                title: const Text('Full Name'),
-                subtitle: Text(userFullName),
-              ),
-
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Remix.mail_line),
-                title: const Text('Email'),
-                subtitle: Text(userEmail),
-              ),
-
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Remix.phone_line),
-                title: const Text('Phone Number'),
-                subtitle: Text(userPhone.isEmpty ? 'Not added' : userPhone),
-              ),
-            ],
-          );
-        },
-      ),
+      //   },
+      // ),
 
       // Notifications
       // ─────────────────────────────────────────────
@@ -419,7 +347,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       // About
       // ─────────────────────────────────────────────
-      ///TODO: make this secion work
       ProfileItemModel(
         icon: Remix.information_line,
         title: 'About RideShare',
@@ -484,83 +411,124 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: .center,
         children: [
           // user data (user model)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppConstColors.subSecondary, AppConstColors.secondary],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppConstColors.shadow,
-                  offset: const Offset(0, 4),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: Column(
-              spacing: 8,
-              children: [
-                // Avatar + Name + email
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: UserAvatar(name: userFullName, fontSize: 24),
-                  title: Text(
-                    userFullName.isNotEmpty ? userFullName : 'Not added',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppConstColors.white,
-                    ),
+          Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppConstColors.subSecondary,
+                      AppConstColors.secondary,
+                    ],
                   ),
-                  subtitle: Text(
-                    userEmail.isNotEmpty ? userEmail : 'Not added',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppConstColors.accent,
-                      // fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // phone number + roles
-                Row(
-                  spacing: 8,
-                  children: [
-                    Expanded(
-                      child: ProfileInfoItem(
-                        icon: Remix.phone_fill,
-                        text: userPhone.isNotEmpty ? userPhone : 'Not added',
-                      ),
-                    ),
-
-                    Expanded(
-                      child: ProfileInfoItem(
-                        icon: canBecomeDriver
-                            ? Remix.car_fill
-                            : Remix.user_fill,
-                        text: 'Rider ${canBecomeDriver ? '| Driver' : ''}',
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConstColors.shadow,
+                      offset: const Offset(0, 4),
+                      blurRadius: 6,
                     ),
                   ],
                 ),
-                // account created at
-                ProfileInfoItem(
-                  icon: Remix.calendar_event_fill,
-                  text: DateFormat(DateFormat.YEAR_MONTH_DAY)
-                      .format(userSinceDate),
+                child: Column(
+                  spacing: 8,
+                  children: [
+                    // Avatar + Name + email
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: userProfilePicture != null
+                          ? CircleAvatar(
+                              radius: 28,
+                              backgroundImage: NetworkImage(userProfilePicture),
+                              onBackgroundImageError: (exception, stackTrace) =>
+                                  UserAvatar(name: userFullName, fontSize: 24),
+                            )
+                          : UserAvatar(
+                              name: userFullName,
+                              fontSize: 24,
+                              radius: 28,
+                            ),
+                      title: Text(
+                        userFullName.isNotEmpty ? userFullName : 'Not added',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppConstColors.white,
+                        ),
+                      ),
+                      subtitle: Text(
+                        userEmail.isNotEmpty ? userEmail : 'Not added',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppConstColors.accent,
+                          // fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    // phone number + roles
+                    Row(
+                      spacing: 8,
+                      children: [
+                        Expanded(
+                          child: ProfileInfoItem(
+                            icon: Remix.phone_fill,
+                            text: userPhone.isNotEmpty
+                                ? userPhone
+                                : 'Not added',
+                          ),
+                        ),
+
+                        Expanded(
+                          child: ProfileInfoItem(
+                            icon: canBecomeDriver
+                                ? Remix.car_fill
+                                : Remix.user_fill,
+                            text: 'Rider ${canBecomeDriver ? '| Driver' : ''}',
+                          ),
+                        ),
+                      ],
+                    ),
+                    // account created at
+                    ProfileInfoItem(
+                      icon: Remix.calendar_event_fill,
+                      text: 'joined since (${timeago.format(userSinceDate)})',
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ), //driver data
+              ),
+
+              Positioned(
+                top: 16,
+                right: 16,
+                child: IconButton(
+                  onPressed: () {
+                    newUserFullNameController.text = userFullName;
+                    newUserPhoneNumberContoller.text = userPhone;
+                    _showEditProfileInfoSheet(
+                      context: context,
+                      userProfilePictureUrl: userProfilePicture,
+                    );
+                  },
+                  icon: Icon(
+                    Remix.pencil_fill,
+                    color: AppConstColors.border,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          //driver data
           AnimatedContainer(
             duration: Duration(milliseconds: 2000),
             curve: Curves.easeInOut,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               // color: AppConstColors.white,
               borderRadius: BorderRadius.circular(20),
@@ -575,7 +543,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   AppConstColors.subSecondary.withValues(alpha: .1),
                   AppConstColors.primary,
                   AppConstColors.primary,
-                  AppConstColors.accent.withValues(alpha: .18),
+                  AppConstColors.subSecondary.withValues(alpha: .05),
                 ],
               ),
               boxShadow: [
@@ -631,62 +599,232 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   curve: Curves.easeInOut,
                   child: showBecomeDriverForm
                       ? Form(
-                          key: driverFormKey,
+                          key: driverFormState,
                           child: Column(
                             spacing: 14,
                             children: [
+                              Divider(),
+                              AppTextFormField(
+                                outLabel: "car type",
+                                controller: driverCarType,
+                                inputColor: AppConstColors.primaryText,
+                                fontSize: 18,
+                                inputAction: .next,
+                                textAlign: .center,
+                                prefixIcon: Icon(
+                                  Remix.car_fill,
+                                  size: 18,
+                                  color: AppConstColors.secondary,
+                                ),
+                                hintText: "EX: Toyota",
+                                validator: (value) {
+                                  final text = value?.trim() ?? '';
+
+                                  if (text.isEmpty) {
+                                    return 'Car type is required';
+                                  }
+
+                                  if (text.length < 2) {
+                                    return 'Car type is too short';
+                                  }
+
+                                  return null;
+                                },
+                              ),
+
+                              AppTextFormField(
+                                controller: driverCarModel,
+                                inputColor: AppConstColors.primaryText,
+                                fontSize: 18,
+                                inputAction: .next,
+                                textAlign: .center,
+                                outLabel: "car model",
+                                prefixIcon: Icon(
+                                  Remix.caravan_fill,
+                                  size: 18,
+                                  color: AppConstColors.secondary,
+                                ),
+                                hintText: "Camry 2026",
+                                validator: (value) {
+                                  final text = value?.trim() ?? '';
+
+                                  if (text.isEmpty) {
+                                    return 'Car model is required';
+                                  }
+
+                                  if (text.length < 2) {
+                                    return 'Car model is too short';
+                                  }
+
+                                  return null;
+                                },
+                              ),
+                              //car color
+                              AppTextFormField(
+                                controller: driverCarColor,
+                                inputColor: AppConstColors.primaryText,
+                                fontSize: 18,
+                                inputAction: .next,
+                                textAlign: .center,
+                                outLabel: "car color",
+                                prefixIcon: Icon(
+                                  Remix.paint_brush_fill,
+                                  size: 18,
+                                  color: AppConstColors.secondary,
+                                ),
+                                hintText: "Black",
+                                validator: (value) {
+                                  final text = value?.trim() ?? '';
+
+                                  if (text.isEmpty) {
+                                    return 'Car color is required';
+                                  }
+
+                                  if (text.length < 3) {
+                                    return 'Enter a valid color';
+                                  }
+
+                                  return null;
+                                },
+                              ),
+
+                              //car plate
                               Row(
                                 spacing: 12,
                                 children: [
-                                  //id card front face
+                                  //numbers
                                   Expanded(
-                                    child: UploadSection(
-                                      icon: Remix.id_card_fill,
-                                      title: 'ID card\n(front face)',
-                                      image: idCard != null
-                                          ? Image.file(
-                                              File(idCard!.path),
-                                              fit: .cover,
-                                            )
-                                          : null,
+                                    child: AppTextFormField(
+                                      controller: driverCarLicensePlateNumbers,
+                                      outLabel: "License Plate",
+                                      inputColor: AppConstColors.primaryText,
+                                      fontSize: 18,
+                                      inputAction: .next,
+                                      textAlign: .center,
+                                      // prefixIcon: Icon(
+                                      //   Remix.id_card_fill,
+                                      //   size: 18,
+                                      //   color: AppConstColors.secondary,
+                                      // ),
+                                      hintText: "1 2 3",
+                                      maxLength: 4,
+                                      keyboardType: .number,
+                                      validator: (value) {
+                                        final text = value?.trim() ?? '';
 
-                                      onTap: () async {
-                                        context.read<LoadingProvider>().show();
-                                        idCard = await imagePicker.pickImage(
-                                          source: ImageSource.gallery,
+                                        if (text.isEmpty) {
+                                          return 'Numbers must not exceed 4 digits.';
+                                        }
+
+                                        final regex = RegExp(
+                                          r'^[0-9٠-٩]{1,4}$',
                                         );
-                                        if (!mounted) return;
-                                        context.read<LoadingProvider>().hide();
-                                        setState(() {});
+
+                                        if (!regex.hasMatch(text)) {
+                                          return 'Numbers must not exceed 4 digits.';
+                                        }
+
+                                        return null;
                                       },
                                     ),
                                   ),
-                                  //criminal record
                                   Expanded(
-                                    child: UploadSection(
-                                      icon: Remix.file_paper_fill,
-                                      title: 'criminal\nrecord',
-                                      image: criminalRecord != null
-                                          ? Image.file(
-                                              File(criminalRecord!.path),
-                                              fit: .cover,
-                                            )
-                                          : null,
-                                      onTap: () async {
-                                        context.read<LoadingProvider>().show();
+                                    child: AppTextFormField(
+                                      controller: driverCarLicensePlateLetters,
+                                      outLabel: "License Plate",
 
-                                        criminalRecord = await imagePicker
-                                            .pickImage(
-                                              source: ImageSource.gallery,
-                                            );
-                                        if (!mounted) return;
-                                        context.read<LoadingProvider>().hide();
-                                        setState(() {});
+                                      inputColor: AppConstColors.primaryText,
+                                      fontSize: 18,
+                                      maxLength: 5,
+                                      inputFormatters: [
+                                        LicensePlateLettersFormatter(),
+                                      ],
+                                      keyboardType: TextInputType.text,
+                                      textAlign: TextAlign.center,
+                                      hintText: "أ ب ج",
+                                      validator: (value) {
+                                        final text =
+                                            value?.replaceAll(' ', '') ?? '';
+
+                                        if (text.isEmpty) {
+                                          return 'License plate is required';
+                                        }
+
+                                        if (!RegExp(r'^[\u0621-\u064A]{1,3}$')
+                                            .hasMatch(text)) {
+                                          return 'Enter up to 3 Arabic letters.';
+                                        }
+
+                                        return null;
                                       },
                                     ),
                                   ),
                                 ],
                               ),
+
+                              ListenableBuilder(
+                                listenable: Listenable.merge([
+                                  driverCarLicensePlateLetters,
+                                  driverCarLicensePlateNumbers,
+                                ]),
+                                builder: (context, child) {
+                                  return EgyptianLicensePlate(
+                                    letters: driverCarLicensePlateLetters.text,
+                                    numbers: driverCarLicensePlateNumbers.text,
+                                  );
+                                },
+                              ),
+
+                              CustomDivider(title: "Required Documents"),
+                              //upload required iamges
+                              UploadSectionFormField(
+                                icon: Remix.id_card_fill,
+                                title: 'ID card (front face)',
+                                image: idCard,
+
+                                onTap: () async {
+                                  context.read<LoadingProvider>().show();
+                                  idCard = await imagePicker.pickImage(
+                                    source: ImageSource.gallery,
+                                  );
+                                  if (!context.mounted) return;
+                                  context.read<LoadingProvider>().hide();
+                                  setState(() {});
+                                },
+                              ),
+                              //criminal record
+                              UploadSectionFormField(
+                                icon: Remix.file_paper_fill,
+                                title: 'criminal record',
+                                image: criminalRecord,
+                                onTap: () async {
+                                  context.read<LoadingProvider>().show();
+
+                                  criminalRecord = await imagePicker.pickImage(
+                                    source: ImageSource.gallery,
+                                  );
+                                  if (!context.mounted) return;
+                                  context.read<LoadingProvider>().hide();
+                                  setState(() {});
+                                },
+                              ),
+                              //driver license
+                              UploadSectionFormField(
+                                icon: Remix.info_card_fill,
+                                title: 'driving license',
+                                image: drivingLicense,
+                                onTap: () async {
+                                  context.read<LoadingProvider>().show();
+
+                                  drivingLicense = await imagePicker.pickImage(
+                                    source: ImageSource.gallery,
+                                  );
+                                  if (!context.mounted) return;
+                                  context.read<LoadingProvider>().hide();
+                                  setState(() {});
+                                },
+                              ),
+                              //submit or back
                               Row(
                                 spacing: 12,
                                 children: [
@@ -695,19 +833,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     onPressed: () {
                                       criminalRecord = null;
                                       idCard = null;
+                                      drivingLicense = null;
                                       setState(() {
                                         showBecomeDriverForm = false;
                                       });
                                     },
-                                    icon: const Icon(Remix.arrow_left_line),
+                                    icon: const Icon(Remix.close_line),
                                   ),
                                   Expanded(
                                     flex: 2,
                                     child: AppMainButton(
                                       onPressed: submitDriverApplication,
                                       title: 'Submit',
-                                      mainColor: AppConstColors.accent,
-
+                                      mainColor: AppConstColors.secondary,
                                       icon: Remix.send_plane_line,
                                     ),
                                   ),
@@ -732,7 +870,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 'You’ll need to provide your personal and vehicle information.',
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
-                                      color: Colors.grey.shade600,
+                                      color: Colors.black,
                                       height: 1.5,
                                     ),
                               ),
@@ -753,7 +891,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         });
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppConstColors.accent,
+                        backgroundColor: AppConstColors.subSecondary,
                         foregroundColor: AppConstColors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -850,9 +988,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 AppMainButton(
                   onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-
                     if (!context.mounted) return;
 
                     Navigator.pushReplacementNamed(
@@ -876,6 +1011,160 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _showEditProfileInfoSheet({
+    required BuildContext context,
+    String? userProfilePictureUrl,
+  }) async {
+    final fullName = newUserFullNameController.text.trim();
+    final phoneNumber = newUserPhoneNumberContoller.text.trim();
+
+    final isProfilePictureChanged = ValueNotifier<bool>(false);
+
+    try {
+      await showAppModalSheet(
+        context,
+        children: [
+          Text(
+            'Edit Profile',
+            style: Theme.of(context).textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            'Update your personal information.',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: AppConstColors.secondaryText),
+          ),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: isProfilePictureChanged,
+                builder: (context, changed, child) {
+                  return CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                    backgroundImage: changed && newUserProfilePicture != null
+                        ? FileImage(File(newUserProfilePicture!.path))
+                        : userProfilePictureUrl != null
+                        ? NetworkImage(userProfilePictureUrl)
+                        : null,
+                    child: !changed && userProfilePictureUrl == null
+                        ? const Icon(Remix.user_line, size: 32)
+                        : null,
+                  );
+                },
+              ),
+
+              ElevatedButton(
+                onPressed: () async {
+                  final pickedImage = await imagePicker.pickImage(
+                    source: ImageSource.gallery,
+                  );
+
+                  if (pickedImage == null) return;
+
+                  newUserProfilePicture = pickedImage;
+
+                  isProfilePictureChanged.value =
+                      pickedImage.path != userProfilePictureUrl;
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Select New Picture'),
+              ),
+            ],
+          ),
+
+          Form(
+            key: newUserDataFormState,
+            child: Column(
+              spacing: 14,
+              children: [
+                AppTextFormField(
+                  controller: newUserFullNameController,
+                  inputAction: TextInputAction.next,
+                  labelText: 'Full Name',
+                  textAlign: TextAlign.center,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Full name is required';
+                    }
+                    return null;
+                  },
+                ),
+
+                AppTextFormField(
+                  controller: newUserPhoneNumberContoller,
+                  keyboardType: TextInputType.phone,
+                  inputAction: TextInputAction.done,
+                  textAlign: TextAlign.center,
+                  maxLength: 11,
+                  labelText: 'Phone Number',
+                  validator: (value) {
+                    final phone = value?.trim() ?? '';
+
+                    if (phone.isEmpty) return null;
+
+                    if (!RegExp(r'^01[0125][0-9]{8}$').hasMatch(phone)) {
+                      return 'Please enter a valid phone number';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              newUserFullNameController,
+              newUserPhoneNumberContoller,
+              isProfilePictureChanged,
+            ]),
+            builder: (context, child) {
+              final hasChanges =
+                  fullName != newUserFullNameController.text.trim() ||
+                  phoneNumber != newUserPhoneNumberContoller.text.trim() ||
+                  isProfilePictureChanged.value;
+
+              return AppMainButton(
+                onPressed: hasChanges
+                    ? () async {
+                        if (!newUserDataFormState.currentState!.validate()) {
+                          return;
+                        }
+
+                        await saveUserNewData();
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
+                      }
+                    : null,
+                title: 'Save Changes',
+                icon: Remix.save_line,
+              );
+            },
+          ),
+        ],
+      );
+    } finally {
+      isProfilePictureChanged.dispose();
+    }
   }
 }
 
@@ -939,8 +1228,8 @@ class ProfileInfoItem extends StatelessWidget {
   }
 }
 
-class UploadSection extends StatelessWidget {
-  const UploadSection({
+class UploadSectionFormField extends StatelessWidget {
+  const UploadSectionFormField({
     required this.icon,
     required this.title,
     required this.onTap,
@@ -951,38 +1240,170 @@ class UploadSection extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
-  final Widget? image;
+  final XFile? image;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        constraints: BoxConstraints(maxHeight: 120, minHeight: 120),
-        clipBehavior: .antiAlias,
-        padding: image != null ? .zero : const .all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          color: AppConstColors.white.withValues(alpha: .3),
-          border: .all(color: AppConstColors.secondary, width: .3),
-        ),
-        child:
-            image ??
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 8,
-              mainAxisAlignment: .center,
-              children: [
-                Icon(icon, size: 28, color: AppConstColors.secondary),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: AppConstColors.white.withValues(alpha: .3),
+        border: Border.all(color: AppConstColors.secondary, width: .3),
       ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        leading: Icon(icon, size: 26, color: AppConstColors.secondary),
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          image != null ? 'Image selected' : 'Tap to upload an image',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: image != null
+                ? AppConstColors.approved
+                : AppConstColors.secondary,
+          ),
+        ),
+        trailing: image != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Image.file(File(image!.path), fit: BoxFit.cover),
+                ),
+              )
+            : Icon(
+                Icons.upload_file_outlined,
+                color: AppConstColors.subSecondary,
+                size: 26,
+              ),
+      ),
+    );
+  }
+}
+
+class EgyptianLicensePlate extends StatelessWidget {
+  final String letters;
+  final String numbers;
+
+  const EgyptianLicensePlate({
+    super.key,
+    required this.letters,
+    required this.numbers,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 240,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.black, width: 2),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              color: const Color(0xFF0F64A5),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(
+                    'EGYPT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  Text(
+                    'مصر',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      numbers.toArabicNumbers().split('').reversed.join(' '),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1.5,
+                    height: 30,
+                    color: Colors.grey.shade400,
+                  ),
+
+                  Expanded(
+                    child: Text(
+                      letters,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LicensePlateLettersFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final letters = newValue.text.replaceAll(RegExp(r'\s'), '');
+
+    final filtered = String.fromCharCodes(
+      letters.runes.where(
+        (rune) =>
+            RegExp(r'[\u0621-\u064A]').hasMatch(String.fromCharCode(rune)),
+      ),
+    );
+
+    final limited = filtered.runes.take(3).toList();
+
+    final formatted = limited.map(String.fromCharCode).join(' ');
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
-import 'package:ride_share/core/constants/app_constants.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
-import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/core/widgets/default_body.dart';
 
 class RiderHomeScreen extends StatefulWidget {
@@ -44,16 +44,12 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProviderWatch = context.watch<AuthProvider>();
+    final user = context.read<AuthProvider>().getUser;
 
-    final user = authProviderWatch.getUser;
-    String userFullName = 'Unkoun';
-    if (user == null) {
-      context.watch<LoadingProvider>().show();
-    } else {
-      context.watch<LoadingProvider>().hide();
-      userFullName = user.fullName.split(' ').take(1).join();
-    }
+    final String userFullName = user == null
+        ? 'Unknown'
+        : user.fullName.split(' ').first;
+
     return SizedBox(
       height: double.infinity,
       width: double.infinity,
