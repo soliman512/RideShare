@@ -44,7 +44,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthProvider>().getUser;
+    final user = context.read<AuthProvider>().user;
 
     final String userFullName = user == null
         ? 'Unknown'

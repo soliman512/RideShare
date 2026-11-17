@@ -1,3 +1,4 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:ride_share/core/models/user_model.dart';
 import 'package:ride_share/core/services/image_compress_services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -90,11 +91,15 @@ class AuthServices {
 
     final profile = await supabaseClient
         .from('users')
-        .select('id')
+        .select('id, full_name')
         .eq('id', user.id)
         .maybeSingle();
+    bool isProfileExists =
+        profile != null &&
+        profile['full_name'] != null &&
+        profile['full_name'].toString().trim().isNotEmpty;
 
-    return profile != null;
+    return isProfileExists;
   }
 
   // check user session
@@ -134,14 +139,64 @@ class AuthServices {
     required String userId,
     required String fullName,
     required String phone,
+    String? profilePictureUrl,
   }) async {
     await supabaseClient
         .from('users')
         .update({
           'full_name': fullName,
           'phone': phone,
+          'profile_photo_url': profilePictureUrl,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', userId);
+  }
+
+  //update user image
+  static Future<void> updateUserProfilePicture({
+    required String userId,
+    required XFile newImage,
+    required String oldImageUrl,
+  }) async {
+    // 1. Extract the old image path from its URL.
+    final uri = Uri.parse(oldImageUrl);
+    final segments = uri.pathSegments;
+
+    final publicIndex = segments.indexOf('public');
+
+    if (publicIndex == -1 || publicIndex + 2 >= segments.length) {
+      throw Exception('Invalid old profile image URL');
+    }
+
+    final bucketName = segments[publicIndex + 1];
+    final oldImagePath = segments.skip(publicIndex + 2).join('/');
+
+    // 2. Replace the old image in the same storage path.
+    await supabaseClient.storage
+        .from(bucketName)
+        .uploadBinary(
+          oldImagePath,
+          await newImage.readAsBytes(),
+          fileOptions: const FileOptions(upsert: true),
+        );
+
+    // 3. Get the updated public URL.
+    final newImageUrl =
+        '${supabaseClient.storage.from(bucketName).getPublicUrl(oldImagePath)}'
+        '?v=${DateTime.now().millisecondsSinceEpoch}';
+
+    // 4. Update the image URL in the users table.
+    await supabaseClient
+        .from('users')
+        .update({
+          'profile_photo_url': newImageUrl,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
+  }
+
+  //sign out
+  static Future<void> signOut() async {
+    await supabaseClient.auth.signOut();
   }
 }

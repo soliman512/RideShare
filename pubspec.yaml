@@ -49,6 +49,10 @@ dependencies:
   supabase_flutter: ^2.18.3
   flutter_image_compress: ^2.5.1
   timeago: ^3.7.1
+  permission_handler: ^13.0.2
+  device_info_plus: ^13.3.0
+  cherry_toast: ^1.13.0
+  internet_connection_checker_plus: ^3.1.2
 
 dev_dependencies:
   flutter_test:

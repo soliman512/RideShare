@@ -1,3 +1,5 @@
+import 'package:cherry_toast/cherry_toast.dart';
+import 'package:cherry_toast/resources/arrays.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +10,7 @@ import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/extension/keyboard_status_extension.dart';
 import 'package:ride_share/core/extension/screen_size_extension.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
-import 'package:ride_share/core/services/auth_services.dart';
+import 'package:ride_share/core/supabase_services/auth_services.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/app_name.dart';
 import 'package:ride_share/core/widgets/app_text_form_field.dart';
@@ -232,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Send OTP and wait for Supabase response
                             await AuthServices.signInWithEmailOtp(email);
-
+                            await outCar();
                             if (!context.mounted) return;
 
                             // Navigate only if sending request succeeds
@@ -244,15 +246,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           } on AuthException catch (e) {
                             if (!context.mounted) return;
 
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(e.message)));
+                            CherryToast.error(
+                              inheritThemeColors: true,
+                              description: Text(e.message),
+                              animationType: AnimationType.fromTop,
+                            ).show(context);
                           } catch (e) {
                             if (!context.mounted) return;
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
+                            CherryToast.error(
+                              inheritThemeColors: true,
+                              description: Text(e.toString()),
+                              animationType: AnimationType.fromTop,
+                            ).show(context);
                           } finally {
                             if (context.mounted) {
                               setState(() {
@@ -279,6 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           }
                         },
+                        showDecoration: false,
                         btnHeign: 44,
                         isOutlined: true,
                         title: "I Have the Code",

@@ -23,7 +23,7 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   @override
   void initState() {
-    context.read<AuthProvider>().loadUser();
+    // context.read<AuthProvider>().loadUser();
     super.initState();
   }
 

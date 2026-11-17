@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ride_share/core/models/user_model.dart';
-import 'package:ride_share/core/services/auth_services.dart';
+import 'package:ride_share/core/supabase_services/auth_services.dart';
 
 enum UserMode { rider, driver }
 
@@ -26,7 +26,6 @@ class AuthProvider extends ChangeNotifier {
 
   // Account state accessors.
   bool get canBecomeDriver => _canBecomeDriver;
-  UserModel? get getUser => _user;
 
   // Account state updates.
   set setCanBecomeDriver(bool value) {

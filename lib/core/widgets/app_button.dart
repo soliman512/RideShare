@@ -11,6 +11,7 @@ class AppMainButton extends StatelessWidget {
     this.isLoading = false,
     this.mainColor,
     this.isOutlined = false,
+    this.showDecoration = true,
     this.btnHeign,
     this.btnWidth,
     this.fontSize,
@@ -20,6 +21,7 @@ class AppMainButton extends StatelessWidget {
   final String title;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final bool showDecoration;
   final Color? mainColor;
   final bool isOutlined;
   final double? btnHeign;
@@ -33,7 +35,7 @@ class AppMainButton extends StatelessWidget {
     final Color contentColor = isOutlined ? buttonColor : Colors.white;
 
     return SizedBox(
-      height: btnHeign ?? 50.h,
+      height: btnHeign ?? 52.h,
       width: btnWidth ?? double.infinity,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
@@ -49,12 +51,10 @@ class AppMainButton extends StatelessWidget {
               : buttonColor.withValues(alpha: .6),
 
           disabledForegroundColor: contentColor.withValues(alpha: .6),
-
+          padding: .zero,
           side: isOutlined
               ? BorderSide(color: buttonColor, width: 1.5)
               : BorderSide.none,
-
-          padding: const EdgeInsets.symmetric(vertical: 14),
 
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -68,34 +68,72 @@ class AppMainButton extends StatelessWidget {
           overlayColor: buttonColor.withValues(alpha: .12),
         ),
 
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 12,
+        child: Stack(
           children: [
-            FittedBox(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  color: contentColor,
-                  fontWeight: .w300,
-                  fontSize: fontSize,
+            if (showDecoration) ...[
+              Positioned(
+                top: -20,
+                bottom: -20,
+                right: 0,
+                child: CircleAvatar(
+                  backgroundColor: isOutlined
+                      ? buttonColor.withValues(alpha: .16)
+                      : AppConstColors.primary.withValues(alpha: .1),
+                  radius: 40,
                 ),
               ),
-            ),
+              Positioned(
+                top: -10,
+                bottom: -10,
+                right: 0,
+                child: CircleAvatar(
+                  backgroundColor: isOutlined
+                      ? buttonColor.withValues(alpha: .16)
+                      : AppConstColors.primary.withValues(alpha: .1),
 
-            if (isLoading)
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: contentColor,
-                  strokeWidth: 2,
+                  radius: 30,
                 ),
-              )
-            else
-              icon != null
-                  ? Icon(icon, color: contentColor)
-                  : SizedBox.shrink(),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 12,
+                children: [
+                  // Spacer(),
+                  // SizedBox(width: 20),
+
+                  FittedBox(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineSmall!
+                          .copyWith(
+                            color: contentColor,
+                            fontWeight: .w300,
+                            fontSize: fontSize,
+                          ),
+                    ),
+                  ),
+                  // Spacer(),
+                  if (isLoading)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: contentColor,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  else ...[
+                    icon != null
+                        ? Icon(icon, color: contentColor)
+                        : SizedBox.shrink(),
+                    // SizedBox(width: 20),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),

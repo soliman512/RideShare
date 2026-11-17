@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cherry_toast/cherry_toast.dart';
+import 'package:cherry_toast/resources/arrays.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +10,7 @@ import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
-import 'package:ride_share/core/services/auth_services.dart';
+import 'package:ride_share/core/supabase_services/auth_services.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/app_text_form_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -218,9 +220,11 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                   );
                                 } on AuthException catch (e) {
                                   if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.toString())),
-                                  );
+                                  CherryToast.error(
+                                    inheritThemeColors: true,
+                                    description: Text(e.toString()),
+                                    animationType: AnimationType.fromTop,
+                                  ).show(context);
                                 }
                                 setState(() {
                                   timer.value = 59;
@@ -288,9 +292,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                     isLoading: isButtonLoading,
                     onPressed: () async {
                       if (formState.currentState!.validate()) {
-                      setState(() {
-                        isButtonLoading = true;
-                      });
+                        setState(() {
+                          isButtonLoading = true;
+                        });
                         try {
                           String otp = '';
                           for (var element in otpControllers) {
@@ -303,6 +307,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           );
                           // check if user found in public.users or no to specific the next page to navigate
                           if (await AuthServices.isUserProfileExists()) {
+                            if (!context.mounted) return;
+                            await context.read<AuthProvider>().loadUser();
                             if (!context.mounted) return;
 
                             Navigator.pushReplacementNamed(
@@ -320,14 +326,18 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           }
                         } on AuthException catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(e.message.toString())),
-                          );
+                          CherryToast.error(
+                            inheritThemeColors: true,
+                            description: Text(e.message.toString()),
+                            animationType: AnimationType.fromTop,
+                          ).show(context);
                         } catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(e.toString())));
+                          CherryToast.error(
+                            inheritThemeColors: true,
+                            description: Text(e.toString()),
+                            animationType: AnimationType.fromTop,
+                          ).show(context);
                         } finally {
                           setState(() {
                             isButtonLoading = false;

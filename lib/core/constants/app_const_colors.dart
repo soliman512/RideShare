@@ -9,7 +9,7 @@ abstract class AppConstColors {
   static const Color secondaryText = Color(0xFFA7ADB9);
 
   static const Color surface = Color(0xFFF1F5FA);
-  static const Color white = Color(0xFFFAFCFD); 
+  static const Color white = Color(0xFFFAFCFD);
 
   static const Color accent = Color(0xFFE9AF3A);
   static const Color shadow = Color(0x12003B72);

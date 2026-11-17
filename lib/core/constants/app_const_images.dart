@@ -13,12 +13,12 @@ abstract class AppConstImages {
   static const String notFoundYet = "$_path/illustration/not_found_yet.png";
   static const String splashScreenBackground =
       "$_path/illustration/splash_screen_background.png";
+  static const String noInternetConnection =
+      "$_path/illustration/no_internet_connection.png";
+  static const String trust =
+      "$_path/illustration/trust.png";
 
   // ************************ GIFs **************************
   static const String verifyEmailGif = "$_path/illustration/verify_email.gif";
   static const String loading = "$_path/illustration/loading.gif";
-}
-
-abstract class AppConstTexts {
-  static const String appName = "Ride Share";
 }

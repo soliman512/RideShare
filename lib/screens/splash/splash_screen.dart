@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
-import 'package:ride_share/core/extension/screen_size_extension.dart';
+import 'package:ride_share/core/providers/app_info_provider.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
-import 'package:ride_share/core/services/auth_services.dart';
+import 'package:ride_share/core/supabase_services/auth_services.dart';
 import 'package:ride_share/core/widgets/app_name.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,10 +21,15 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  ValueNotifier<bool> showLoadYourData = ValueNotifier<bool>(false);
+
+  Future<void> getAppInfo() async {
+    await context.read<AppInfoProvider>().initAppInfo();
+  }
 
   @override
   void initState() {
-    super.initState();
+    getAppInfo();
 
     _controller = AnimationController(
       vsync: this,
@@ -34,15 +40,26 @@ class _SplashScreenState extends State<SplashScreen>
       begin: .3,
       end: 1,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
     _controller.forward();
-    Timer(Duration(milliseconds: 2000), () {
+
+    ///////////////////////////////
+    Timer(Duration(milliseconds: 2000), () async {
+      showLoadYourData.value = true;
       if (AuthServices.isUserHasSession()) {
-        context.read<AuthProvider>().loadUser();
-        Navigator.pushReplacementNamed(context, AppRoutes.mainScaffold);
+        await context.read<AuthProvider>().loadUser();
+        if (await AuthServices.isUserProfileExists() == false) {
+          if (!mounted) return;
+          Navigator.pushReplacementNamed(context, AppRoutes.profileSetupScreen);
+        } else {
+          if (!mounted) return;
+          Navigator.pushReplacementNamed(context, AppRoutes.mainScaffold);
+        }
       } else {
         Navigator.pushReplacementNamed(context, AppRoutes.loginScreen);
       }
     });
+    super.initState();
   }
 
   @override
@@ -53,60 +70,112 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        alignment: .center,
-        children: [
-          Image.asset(
-            AppConstImages.splashScreenBackground,
-            width: double.infinity,
-            height: double.infinity,
-            fit: .cover,
-          ),
-          Column(
-            mainAxisAlignment: .center,
-            crossAxisAlignment: .center,
-            children: [
-              AnimatedBuilder(
-                animation: _animation,
-                builder: (context, child) {
-                  return Transform.scale(scale: _animation.value, child: child);
-                },
-                child: Image.asset(AppConstImages.appLogo, width: 80),
-              ),
-              const SizedBox(height: 12),
-              AppName(),
-              Text(
-                "Better Rides . Together.",
-                textAlign: .center,
-                style: TextStyle(
-                  color: Colors.blueGrey,
-                  fontSize: 14,
-                  fontWeight: .w200,
-                ),
-              ),
-              const SizedBox(height: 4),
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
-              SizedBox(
-                width: context.screenWidth * .4,
-                child: LinearProgressIndicator(
-                  minHeight: 4,
-                  borderRadius: .circular(20),
-                  // color: Theme.of(context).,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  color: Theme.of(context).colorScheme.surface,
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background image
+              Image.asset(
+                AppConstImages.splashScreenBackground,
+                fit: BoxFit.cover,
+              ),
+
+              // Soft overlay
+              Container(color: Colors.white.withValues(alpha: 0.08)),
+
+              // Top-left logo
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 20,
+                left: 24,
+                child: AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _animation.value,
+                      child: Transform.scale(
+                        scale: _animation.value,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Image.asset(
+                    AppConstImages.appLogo,
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-              // LinearProgressIndicator(
-              //   minHeight: 12,
-              //   borderRadius: .circular(20),
-              //   // color: Theme.of(context).,
-              //   color: Theme.of(context).colorScheme.primary,
-              // ),
-              // SizedBox(height: 120),
+
+              // Centered app name
+
+              // Tagline and loading indicator
+              Column(
+                mainAxisAlignment: .center,
+                children: [
+                  AppName(fontSize: 40),
+                  Text(
+                    'Better Rides. Together.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppConstColors.secondaryText,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: primaryColor,
+                      backgroundColor: primaryColor.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Bottom footer
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: ValueListenableBuilder(
+                  valueListenable: showLoadYourData,
+                  builder: (context, value, child) {
+                    return Visibility(
+                      visible: value,
+                      child: Text(
+                        'load your data...',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              blurRadius: 6,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
