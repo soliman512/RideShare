@@ -5,42 +5,36 @@ import 'package:ride_share/core/supabase_services/auth_services.dart';
 enum UserMode { rider, driver }
 
 class AuthProvider extends ChangeNotifier {
-  // Account state.
-  bool _canBecomeDriver = false;
-  // Active app mode.
-  UserMode _currentMode = UserMode.rider;
+  // ==================== User Data ====================
+  UserModel? _user;
   String? _userEmail;
 
-  //-----------------------------
-  UserModel? _user;
+  // ==================== Account State ====================
+  UserMode _currentMode = UserMode.rider;
+    
 
+  // ==================== Getters ====================
   UserModel? get user => _user;
   String? get userEmail => _userEmail;
-
+  UserMode get currentUserMode => _currentMode;
+  
+  // ==================== User Data Operations ====================
   Future<void> loadUser() async {
     _user = await AuthServices.getCurrentUserData();
 
     notifyListeners();
   }
-  //-----------------------------
-
-  // Account state accessors.
-  bool get canBecomeDriver => _canBecomeDriver;
-
-  // Account state updates.
-  set setCanBecomeDriver(bool value) {
-    _canBecomeDriver = value;
-    notifyListeners();
-  }
-
-  // Active app mode accessors and updates.
-  UserMode get currentUserMode => _currentMode;
-  set setMode(UserMode userMode) {
-    _currentMode = userMode;
-    notifyListeners();
-  }
+  
+  // ==================== Account State Updates ====================
   set setUserEmail(String email) {
     _userEmail = email;
     notifyListeners();
   }
+
+  // ==================== App Mode ====================
+  set setMode(UserMode userMode) {
+    _currentMode = userMode;
+    notifyListeners();
+  }
+
 }

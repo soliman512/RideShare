@@ -2,10 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ride_share/core/extension/driver_approval_status_extension.dart';
+import 'package:ride_share/core/models/driver_model.dart';
+import 'package:ride_share/core/providers/current_page_provider.dart';
+import 'package:ride_share/core/providers/driver_profile_provider.dart';
+import 'package:ride_share/core/services/driver_storage_services.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:cherry_toast/resources/arrays.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
@@ -20,7 +26,7 @@ import 'package:ride_share/core/providers/app_info_provider.dart';
 import 'package:ride_share/core/widgets/app_text_form_field.dart';
 import 'package:ride_share/core/widgets/show_app_modal_sheet.dart';
 import 'package:ride_share/core/supabase_services/auth_services.dart';
-import 'package:ride_share/core/supabase_services/driver_services.dart';
+import 'package:ride_share/core/supabase_services/driver_profile_services.dart';
 import 'package:ride_share/core/extension/english_nums_to_arabic_extension.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -31,8 +37,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _driverBoxAnimationController;
+
   //forms key
   GlobalKey<FormState> newUserDataFormState = GlobalKey<FormState>();
   final GlobalKey<FormState> driverFormState = GlobalKey<FormState>();
@@ -50,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   XFile? idCard;
   XFile? criminalRecord;
   XFile? drivingLicense;
-  final List<XFile> carImages = [];
+  List<XFile> carImages = [];
   //stats
   bool messages = true;
   bool rideRequests = true;
@@ -64,6 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   //app info
   String? appName;
   String? appVersion;
+
   // update user data in supabase
 
   Future<void> saveUserNewData() async {
@@ -113,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       CherryToast.success(
         inheritThemeColors: true,
         description: const Text('Your data has been updated.'),
-        animationType: AnimationType.fromTop,
+        animationType: AnimationType.fromLeft,
       ).show(context);
     } catch (e, stackTrace) {
       debugPrint('Update user data error: $e');
@@ -124,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       CherryToast.error(
         inheritThemeColors: true,
         description: const Text('There is a problem, try again later.'),
-        animationType: AnimationType.fromTop,
+        animationType: AnimationType.fromLeft,
       ).show(context);
     } finally {
       loadingProvider.hide();
@@ -133,26 +141,45 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> submitUserBecomeAsDriverRequest({
     required String userId,
-    required String idCardUrl,
-    required String criminalRecordUrl,
-    required String drivingLicenseUrl,
+    required String idCardFile,
+    required String criminalRecordFile,
+    required String drivingLicenseFile,
     required String carType,
     required String carModel,
     required String carColor,
     required String licensePlate,
     List<String>? carImagesUrl,
   }) async {
-    await DriverServices.createRequest(
+    // 1. Upload images to Storage
+
+    final uploadedImages = await DriverStorageService.uploadDriverImages(
       userId: userId,
-      idCardUrl: idCardUrl,
-      criminalRecordUrl: criminalRecordUrl,
-      drivingLicenseUrl: drivingLicenseUrl,
+      idCardPath: idCardFile,
+      criminalRecordPath: criminalRecordFile,
+      drivingLicensePath: drivingLicenseFile,
+      carImagePaths: carImages.map((image) => image.path).toList(),
+    );
+
+    await DriverProfileServices.createRequest(
+      userId: userId,
       carType: carType,
       carModel: carModel,
       carColor: carColor,
       licensePlate: licensePlate,
-      carImagesUrl: carImagesUrl,
+      idCardUrl: uploadedImages['id_card_url'],
+      criminalRecordUrl: uploadedImages['criminal_record_url'],
+      drivingLicenseUrl: uploadedImages['driving_license_url'],
+      carImagesUrls: (uploadedImages['car_images'] as List<String>?),
     );
+
+    // // 2. Update existing driver record
+    // await DriverProfileServices.updateDriverImages(
+    //   userId: userId,
+    //   idCardUrl: uploadedImages['id_card_url'],
+    //   criminalRecordUrl: uploadedImages['criminal_record_url'],
+    //   drivingLicenseUrl: uploadedImages['driving_license_url'],
+    //   carImages: (uploadedImages['car_images'] as List<String>?),
+    // );
   }
 
   Future<void> getAppInfo() async {
@@ -209,14 +236,14 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   void initState() {
+    super.initState();
     getAppInfo();
+
     _driverBoxAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3200),
     );
-
     _driverBoxAnimationController.repeat(reverse: false);
-    super.initState();
   }
 
   @override
@@ -233,26 +260,28 @@ class _ProfileScreenState extends State<ProfileScreen>
     // newUserFullNameController.dispose();
     // newUserPhoneNumberContoller.dispose();
     _driverBoxAnimationController.dispose();
+
     super.dispose();
   }
 
   bool isUploadImageBtnStart = false;
+
   @override
   Widget build(BuildContext context) {
-    final String userId = context.watch<AuthProvider>().user!.id;
-    final String userFullName = context.watch<AuthProvider>().user!.fullName;
-    final String userEmail = context.watch<AuthProvider>().user!.email;
-    final String userPhone =
-        context.watch<AuthProvider>().user!.phone ?? 'not found';
-    final String? userProfilePicture = context
-        .watch<AuthProvider>()
-        .user!
-        .profilePictureUrl;
-    final DateTime userSinceDate = context
-        .watch<AuthProvider>()
-        .user!
-        .createdAt;
-    bool canBecomeDriver = context.watch<AuthProvider>().canBecomeDriver;
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user!;
+
+    final userId = user.id;
+    final userFullName = user.fullName;
+    final userEmail = user.email;
+    final userPhone = user.phone ?? '';
+    final userProfilePicture = user.profilePictureUrl;
+    final userSinceDate = user.createdAt;
+
+    final driverProvider = context.watch<DriverProfileProvider>();
+    final driverProfile = driverProvider.driver;
+    final canBecomeDriver = driverProvider.canBecomeDriver;
+
     //actions items
     final List<ProfileItemModel> profileSettings = [
       // notifications
@@ -353,7 +382,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
 
-              HelpExpansionTile(
+              _buildHelpExpansionTile(
                 icon: Remix.search_line,
                 title: 'How do I book a ride?',
                 text:
@@ -361,7 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     'choose an available ride, and follow the booking steps.',
               ),
 
-              HelpExpansionTile(
+              _buildHelpExpansionTile(
                 icon: Remix.car_line,
                 title: 'How do I become a driver?',
                 text:
@@ -370,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     'your driver information.',
               ),
 
-              HelpExpansionTile(
+              _buildHelpExpansionTile(
                 icon: Remix.close_circle_line,
                 title: 'How can I cancel a ride?',
                 text:
@@ -448,611 +477,153 @@ class _ProfileScreenState extends State<ProfileScreen>
         crossAxisAlignment: .center,
         children: [
           // user data (user model)
-          Stack(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppConstColors.subSecondary,
-                      AppConstColors.secondary,
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppConstColors.shadow,
-                      offset: const Offset(0, 4),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  spacing: 8,
-                  children: [
-                    // Avatar + Name + email
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: userProfilePicture != null
-                          ? CircleAvatar(
-                              radius: 28,
-                              backgroundImage: NetworkImage(userProfilePicture),
-                              onBackgroundImageError: (exception, stackTrace) =>
-                                  UserAvatar(name: userFullName, fontSize: 24),
-                            )
-                          : UserAvatar(
-                              name: userFullName,
-                              fontSize: 24,
-                              radius: 28,
-                            ),
-                      title: Text(
-                        userFullName.isNotEmpty ? userFullName : 'Not added',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppConstColors.white,
-                        ),
-                      ),
-                      subtitle: Text(
-                        userEmail.isNotEmpty ? userEmail : 'Not added',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppConstColors.accent,
-                          // fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
 
-                    // phone number + roles
-                    Row(
-                      spacing: 8,
-                      children: [
-                        Expanded(
-                          child: ProfileInfoItem(
-                            icon: Remix.phone_fill,
-                            text: userPhone.isNotEmpty
-                                ? userPhone
-                                : 'Not added',
-                          ),
-                        ),
-
-                        Expanded(
-                          child: ProfileInfoItem(
-                            icon: canBecomeDriver
-                                ? Remix.car_fill
-                                : Remix.user_fill,
-                            text: 'Rider ${canBecomeDriver ? '| Driver' : ''}',
-                          ),
-                        ),
-                      ],
-                    ),
-                    // account created at
-                    ProfileInfoItem(
-                      icon: Remix.calendar_event_fill,
-                      text: 'joined since (${timeago.format(userSinceDate)})',
-                    ),
-                  ],
-                ),
-              ),
-
-              Positioned(
-                top: 16,
-                right: 16,
-                child: IconButton(
-                  onPressed: () {
-                    newUserFullNameController.text = userFullName;
-                    newUserPhoneNumberContoller.text = userPhone;
-                    _showEditProfileInfoSheet(
-                      context: context,
-                      userProfilePictureUrl: userProfilePicture,
-                    );
-                  },
-                  icon: Icon(
-                    Remix.pencil_fill,
-                    color: AppConstColors.border,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          //driver data
-          RepaintBoundary(
-            child: AnimatedBuilder(
-              animation: _driverBoxAnimationController,
-              builder: (context, child) {
-                final double value = _driverBoxAnimationController.value;
-                final double offset = -3.0 + (value * 6.0);
-
-                return Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppConstColors.accent.withValues(alpha: 0.6),
-                    ),
-                    color: showBecomeDriverForm ? AppConstColors.white : null,
-                    gradient: showBecomeDriverForm
-                        ? null
-                        : LinearGradient(
-                            begin: Alignment(offset - 1.2, offset - 1.2),
-                            end: Alignment(offset + 1.2, offset + 1.2),
+            child: !showBecomeDriverForm
+                ? Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                             colors: [
-                              Colors.white,
-                              const Color.fromARGB(255, 255, 249, 235),
-                              const Color.fromARGB(255, 255, 212, 131),
-                              const Color.fromARGB(255, 255, 249, 235),
-                              Colors.white,
+                              AppConstColors.subSecondary,
+                              AppConstColors.secondary,
                             ],
-                            stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
                           ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppConstColors.shadow.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: child,
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  ListTile(
-                    contentPadding: .zero,
-                    leading: Container(
-                      padding: const EdgeInsets.all(11),
-                      decoration: BoxDecoration(
-                        color: AppConstColors.primary.withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Remix.car_fill,
-                        color: AppConstColors.accent,
-                        size: 24,
-                      ),
-                    ),
-                    title: Text(
-                      'Become a Driver',
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Text(
-                      'Start offering rides',
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: Colors.grey.shade600),
-                    ),
-                  ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConstColors.shadow,
+                              offset: const Offset(0, 4),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          spacing: 8,
+                          children: [
+                            // Avatar + Name + email
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: userProfilePicture != null
+                                  ? CircleAvatar(
+                                      radius: 28,
+                                      backgroundImage: NetworkImage(
+                                        userProfilePicture,
+                                      ),
+                                      onBackgroundImageError:
+                                          (exception, stackTrace) => UserAvatar(
+                                            name: userFullName,
+                                            fontSize: 24,
+                                          ),
+                                    )
+                                  : UserAvatar(
+                                      name: userFullName,
+                                      fontSize: 24,
+                                      radius: 28,
+                                    ),
+                              title: Text(
+                                userFullName.isNotEmpty
+                                    ? userFullName
+                                    : 'Not added',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppConstColors.white,
+                                    ),
+                              ),
+                              subtitle: Text(
+                                userEmail.isNotEmpty ? userEmail : 'Not added',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppConstColors.accent,
+                                      // fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
 
-                  // Description
-                  Text(
-                    'Share your journey with others and earn by offering rides.',
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: Colors.grey.shade700, height: 1.5),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Requirements
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                    child: showBecomeDriverForm
-                        ? Form(
-                            key: driverFormState,
-                            child: Column(
-                              spacing: 14,
+                            // phone number + roles
+                            Row(
+                              spacing: 8,
                               children: [
-                                Divider(),
-                                AppTextFormField(
-                                  outLabel: "car type",
-                                  controller: driverCarType,
-                                  inputColor: AppConstColors.primaryText,
-                                  fontSize: 18,
-                                  inputAction: .next,
-                                  textAlign: .center,
-                                  prefixIcon: Icon(
-                                    Remix.car_fill,
-                                    size: 18,
-                                    color: AppConstColors.secondary,
+                                Expanded(
+                                  child: _buildProfileInfoItem(
+                                    icon: Remix.phone_fill,
+                                    text: userPhone.isNotEmpty
+                                        ? userPhone
+                                        : 'Not added',
                                   ),
-                                  hintText: "EX: Toyota",
-                                  validator: (value) {
-                                    final text = value?.trim() ?? '';
-
-                                    if (text.isEmpty) {
-                                      return 'Car type is required';
-                                    }
-
-                                    if (text.length < 2) {
-                                      return 'Car type is too short';
-                                    }
-
-                                    return null;
-                                  },
                                 ),
 
-                                AppTextFormField(
-                                  controller: driverCarModel,
-                                  inputColor: AppConstColors.primaryText,
-                                  fontSize: 18,
-                                  inputAction: .next,
-                                  textAlign: .center,
-                                  outLabel: "car model",
-                                  prefixIcon: Icon(
-                                    Remix.caravan_fill,
-                                    size: 18,
-                                    color: AppConstColors.secondary,
+                                Expanded(
+                                  child: _buildProfileInfoItem(
+                                    icon: canBecomeDriver
+                                        ? Remix.car_fill
+                                        : Remix.user_fill,
+                                    text:
+                                        'Rider ${canBecomeDriver ? '| Driver' : ''}',
                                   ),
-                                  hintText: "Camry 2026",
-                                  validator: (value) {
-                                    final text = value?.trim() ?? '';
-
-                                    if (text.isEmpty) {
-                                      return 'Car model is required';
-                                    }
-
-                                    if (text.length < 2) {
-                                      return 'Car model is too short';
-                                    }
-
-                                    return null;
-                                  },
-                                ),
-                                //car color
-                                AppTextFormField(
-                                  controller: driverCarColor,
-                                  inputColor: AppConstColors.primaryText,
-                                  fontSize: 18,
-                                  inputAction: .next,
-                                  textAlign: .center,
-                                  outLabel: "car color",
-                                  prefixIcon: Icon(
-                                    Remix.paint_brush_fill,
-                                    size: 18,
-                                    color: AppConstColors.secondary,
-                                  ),
-                                  hintText: "Black",
-                                  validator: (value) {
-                                    final text = value?.trim() ?? '';
-
-                                    if (text.isEmpty) {
-                                      return 'Car color is required';
-                                    }
-
-                                    if (text.length < 3) {
-                                      return 'Enter a valid color';
-                                    }
-
-                                    return null;
-                                  },
-                                ),
-
-                                //car plate
-                                Row(
-                                  spacing: 12,
-                                  children: [
-                                    //numbers
-                                    Expanded(
-                                      child: AppTextFormField(
-                                        controller:
-                                            driverCarLicensePlateNumbers,
-                                        outLabel: "License Plate",
-                                        inputColor: AppConstColors.primaryText,
-                                        fontSize: 18,
-                                        inputAction: .next,
-                                        textAlign: .center,
-                                        // prefixIcon: Icon(
-                                        //   Remix.id_card_fill,
-                                        //   size: 18,
-                                        //   color: AppConstColors.secondary,
-                                        // ),
-                                        hintText: "1 2 3",
-                                        maxLength: 4,
-                                        keyboardType: .number,
-                                        validator: (value) {
-                                          final text = value?.trim() ?? '';
-
-                                          if (text.isEmpty) {
-                                            return 'Numbers must not exceed 4 digits.';
-                                          }
-
-                                          final regex = RegExp(
-                                            r'^[0-9٠-٩]{1,4}$',
-                                          );
-
-                                          if (!regex.hasMatch(text)) {
-                                            return 'Numbers must not exceed 4 digits.';
-                                          }
-
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: AppTextFormField(
-                                        controller:
-                                            driverCarLicensePlateLetters,
-                                        outLabel: "License Plate",
-
-                                        inputColor: AppConstColors.primaryText,
-                                        fontSize: 18,
-                                        maxLength: 5,
-                                        inputFormatters: [
-                                          LicensePlateLettersFormatter(),
-                                        ],
-                                        keyboardType: TextInputType.text,
-                                        textAlign: TextAlign.center,
-                                        hintText: "أ ب ج",
-                                        validator: (value) {
-                                          final text =
-                                              value?.replaceAll(' ', '') ?? '';
-
-                                          if (text.isEmpty) {
-                                            return 'License plate is required';
-                                          }
-
-                                          if (!RegExp(r'^[\u0621-\u064A]{1,3}$')
-                                              .hasMatch(text)) {
-                                            return 'Enter up to 3 Arabic letters.';
-                                          }
-
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                ListenableBuilder(
-                                  listenable: Listenable.merge([
-                                    driverCarLicensePlateLetters,
-                                    driverCarLicensePlateNumbers,
-                                  ]),
-                                  builder: (context, child) {
-                                    return EgyptianLicensePlate(
-                                      letters:
-                                          driverCarLicensePlateLetters.text,
-                                      numbers:
-                                          driverCarLicensePlateNumbers.text,
-                                    );
-                                  },
-                                ),
-
-                                CustomDivider(title: "Required Documents"),
-                                //upload required iamges
-                                UploadSectionFormField(
-                                  icon: Remix.id_card_fill,
-                                  title: 'ID card (front face)',
-                                  image: idCard,
-
-                                  onTap: () async {
-                                    context.read<LoadingProvider>().show();
-                                    idCard = await imagePicker.pickImage(
-                                      source: ImageSource.gallery,
-                                    );
-                                    if (!context.mounted) return;
-                                    context.read<LoadingProvider>().hide();
-                                    setState(() {});
-                                  },
-                                ),
-                                //criminal record
-                                UploadSectionFormField(
-                                  icon: Remix.file_paper_fill,
-                                  title: 'criminal record',
-                                  image: criminalRecord,
-                                  onTap: () async {
-                                    context.read<LoadingProvider>().show();
-
-                                    criminalRecord = await imagePicker
-                                        .pickImage(source: ImageSource.gallery);
-                                    if (!context.mounted) return;
-                                    context.read<LoadingProvider>().hide();
-                                    setState(() {});
-                                  },
-                                ),
-                                //driver license
-                                UploadSectionFormField(
-                                  icon: Remix.info_card_fill,
-                                  title: 'driving license',
-                                  image: drivingLicense,
-                                  onTap: () async {
-                                    context.read<LoadingProvider>().show();
-
-                                    drivingLicense = await imagePicker
-                                        .pickImage(source: ImageSource.gallery);
-                                    if (!context.mounted) return;
-                                    context.read<LoadingProvider>().hide();
-                                    setState(() {});
-                                  },
-                                ),
-                                CustomDivider(title: "Vehicle Images"),
-
-                                buildcarImagesSection(),
-
-                                //submit or back
-                                Row(
-                                  spacing: 12,
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Back',
-                                      onPressed: () {
-                                        criminalRecord = null;
-                                        idCard = null;
-                                        drivingLicense = null;
-                                        setState(() {
-                                          showBecomeDriverForm = false;
-                                        });
-                                      },
-                                      icon: const Icon(Remix.close_line),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: AppMainButton(
-                                        onPressed: () async {
-                                          if (!driverFormState.currentState!
-                                                  .validate() ||
-                                              idCard == null ||
-                                              criminalRecord == null ||
-                                              drivingLicense == null) {
-                                            CherryToast.warning(
-                                              title: Text(
-                                                "missing fields",
-                                                style: TextStyle(
-                                                  color: AppConstColors.accent,
-                                                ),
-                                              ),
-                                              description: Text(
-                                                'please fill all required fields',
-                                              ),
-                                            ).show(context);
-                                            return;
-                                          } else if (carImages.isEmpty) {
-                                            CherryToast.warning(
-                                              title: Text(
-                                                "missing vehicle images",
-                                                style: TextStyle(
-                                                  color: AppConstColors.accent,
-                                                ),
-                                              ),
-                                              description: Text(
-                                                'add at least 1 car image',
-                                              ),
-                                            ).show(context);
-                                            return;
-                                          }
-                                          try {
-                                            context
-                                                .read<LoadingProvider>()
-                                                .show();
-                                            await submitUserBecomeAsDriverRequest(
-                                              userId: userId,
-                                              idCardUrl: idCard!.path,
-                                              criminalRecordUrl:
-                                                  criminalRecord!.path,
-                                              drivingLicenseUrl:
-                                                  drivingLicense!.path,
-                                              carType: driverCarType.text,
-                                              carModel: driverCarModel.text,
-                                              carColor: driverCarColor.text,
-                                              licensePlate:
-                                                  '${driverCarLicensePlateNumbers.text} ${driverCarLicensePlateLetters.text}',
-                                              carImagesUrl: carImages
-                                                  .map((image) => image.path)
-                                                  .toList(),
-                                            );
-                                          } catch (e) {
-                                            if (!context.mounted) return;
-                                            CherryToast.error(
-                                              title: Text(
-                                                "Error",
-                                                style: TextStyle(
-                                                  color: AppConstColors.error,
-                                                ),
-                                              ),
-                                              description: Text(e.toString()),
-                                            ).show(context);
-                                          } finally {
-                                            if (context.mounted) {
-                                              context
-                                                  .read<LoadingProvider>()
-                                                  .hide();
-                                              CherryToast.success(
-                                                title: Text(
-                                                  "done",
-                                                  style: TextStyle(
-                                                    color:
-                                                        AppConstColors.approved,
-                                                  ),
-                                                ),
-                                                description: Text(
-                                                  "your request now under review",
-                                                ),
-                                              ).show(context);
-                                            }
-                                          }
-                                        },
-                                        title: 'Submit',
-                                        mainColor: AppConstColors.secondary,
-                                        icon: Remix.send_plane_line,
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ],
                             ),
-                          )
-                        : Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Remix.information_line,
-                                color: AppConstColors.accent,
-                                size: 19,
-                              ),
-
-                              const SizedBox(width: 9),
-
-                              Expanded(
-                                child: Text(
-                                  'You’ll need to provide your personal and vehicle information.',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Colors.black,
-                                        height: 1.5,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  if (!showBecomeDriverForm)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () {
-                          setState(() {
-                            showBecomeDriverForm = true;
-                          });
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppConstColors.accent,
-                          foregroundColor: AppConstColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Register as a Driver',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                            // account created at
+                            _buildProfileInfoItem(
+                              icon: Remix.calendar_event_fill,
+                              text:
+                                  'joined since (${timeago.format(userSinceDate)})',
                             ),
-                            const SizedBox(width: 8),
-                            const Icon(Remix.arrow_right_line, size: 19),
                           ],
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
+
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: IconButton(
+                          onPressed: () {
+                            newUserFullNameController.text = userFullName;
+                            newUserPhoneNumberContoller.text = userPhone;
+                            _showEditProfileInfoSheet(
+                              context: context,
+                              userProfilePictureUrl: userProfilePicture,
+                            );
+                          },
+                          icon: Icon(
+                            Remix.pencil_fill,
+                            color: AppConstColors.border,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : null,
           ),
 
+          //become as driver box & form
+          if (driverProfile == null)
+            _becomeAsDriverBoxAndForm(context, userId)
+          else
+            switch (driverProfile.approvalStatus) {
+              DriverApprovalStatus.underReview => _buildDriverStatusCard(
+                status: .underReview,
+              ),
+              DriverApprovalStatus.rejected => _buildDriverStatusCard(
+                status: .rejected,
+                rejectedReason: driverProfile.rejectedReason,
+              ),
+              DriverApprovalStatus.approved => _buildDriverStatusCard(
+                status: .approved,
+              ),
+            },
           //actions
           Container(
             padding: .all(12),
@@ -1113,7 +684,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
 
           const SizedBox(height: 8),
-          //logout
+
+          //logout button
           AppMainButton(
             onPressed: () => showAppModalSheet(
               context,
@@ -1146,7 +718,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         description: const Text(
                           "An unexpected problem occurred, please try again later.",
                         ),
-                        animationType: AnimationType.fromTop,
+                        animationType: AnimationType.fromLeft,
                       ).show(context);
                     } finally {
                       context.read<LoadingProvider>().hide();
@@ -1166,6 +738,491 @@ class _ProfileScreenState extends State<ProfileScreen>
 
           const SizedBox(height: 10),
         ],
+      ),
+    );
+  }
+
+  RepaintBoundary _becomeAsDriverBoxAndForm(
+    BuildContext context,
+    String userId,
+  ) {
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _driverBoxAnimationController,
+        builder: (context, child) {
+          final double value = _driverBoxAnimationController.value;
+          final double offset = -3.0 + (value * 6.0);
+
+          return Container(
+            padding: showBecomeDriverForm ? .zero : const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: showBecomeDriverForm
+                  ? null
+                  : Border.all(
+                      color: AppConstColors.accent.withValues(alpha: 0.6),
+                    ),
+              color: showBecomeDriverForm ? AppConstColors.white : null,
+              gradient: showBecomeDriverForm
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment(offset - 1.2, offset - 1.2),
+                      end: Alignment(offset + 1.2, offset + 1.2),
+                      colors: [
+                        Colors.white,
+                        const Color.fromARGB(255, 255, 249, 235),
+                        const Color.fromARGB(255, 255, 212, 131),
+                        const Color.fromARGB(255, 255, 249, 235),
+                        Colors.white,
+                      ],
+                      stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+                    ),
+              boxShadow: showBecomeDriverForm
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: AppConstColors.shadow.withValues(alpha: 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: child,
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            ListTile(
+              contentPadding: .zero,
+              leading: Container(
+                padding: const EdgeInsets.all(11),
+                decoration: BoxDecoration(
+                  color: AppConstColors.primary.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Remix.car_fill,
+                  color: showBecomeDriverForm
+                      ? AppConstColors.subSecondary
+                      : AppConstColors.accent,
+                  size: 24,
+                ),
+              ),
+              title: Text(
+                'Become a Driver',
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text(
+                'Start offering rides',
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: Colors.grey.shade600),
+              ),
+              trailing: showBecomeDriverForm
+                  ? IconButton(
+                      tooltip: 'Back',
+                      onPressed: () {
+                        criminalRecord = null;
+                        idCard = null;
+                        drivingLicense = null;
+                        setState(() {
+                          showBecomeDriverForm = false;
+                        });
+                      },
+                      icon: const Icon(Remix.close_line),
+                    )
+                  : null,
+            ),
+
+            // Description
+            Text(
+              'Share your journey with others and earn by offering rides.',
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: Colors.grey.shade700, height: 1.5),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Requirements
+            AnimatedSize(
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              child: showBecomeDriverForm
+                  ? Form(
+                      key: driverFormState,
+                      child: Column(
+                        spacing: 18,
+                        children: [
+                          CustomDivider(title: "vehicle properties"),
+                          AppTextFormField(
+                            labelText: "car type",
+                            controller: driverCarType,
+                            inputColor: AppConstColors.primaryText,
+                            fontSize: 18,
+                            inputAction: .next,
+                            mainColor: AppConstColors.subSecondary,
+
+                            prefixIcon: Icon(
+                              Remix.car_fill,
+                              size: 18,
+                              color: AppConstColors.subSecondary,
+                            ),
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+
+                              if (text.isEmpty) {
+                                return 'Car type is required';
+                              }
+
+                              if (text.length < 2) {
+                                return 'Car type is too short';
+                              }
+
+                              return null;
+                            },
+                          ),
+
+                          AppTextFormField(
+                            controller: driverCarModel,
+                            inputColor: AppConstColors.primaryText,
+                            fontSize: 18,
+                            inputAction: .next,
+                            mainColor: AppConstColors.subSecondary,
+                            labelText: "car model",
+                            prefixIcon: Icon(
+                              Icons.model_training_rounded,
+                              size: 18,
+                              color: AppConstColors.subSecondary,
+                            ),
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+
+                              if (text.isEmpty) {
+                                return 'Car model is required';
+                              }
+
+                              if (text.length < 2) {
+                                return 'Car model is too short';
+                              }
+
+                              return null;
+                            },
+                          ),
+                          //car color
+                          AppTextFormField(
+                            controller: driverCarColor,
+                            inputColor: AppConstColors.primaryText,
+                            fontSize: 18,
+                            inputAction: .next,
+                            mainColor: AppConstColors.subSecondary,
+                            labelText: "car color",
+                            prefixIcon: Icon(
+                              Remix.paint_brush_fill,
+                              size: 18,
+                              color: AppConstColors.subSecondary,
+                            ),
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+
+                              if (text.isEmpty) {
+                                return 'Car color is required';
+                              }
+
+                              if (text.length < 3) {
+                                return 'Enter a valid color';
+                              }
+
+                              return null;
+                            },
+                          ),
+
+                          //car plate
+                          Row(
+                            spacing: 12,
+                            children: [
+                              //numbers
+                              Expanded(
+                                child: AppTextFormField(
+                                  controller: driverCarLicensePlateNumbers,
+                                  mainColor: AppConstColors.subSecondary,
+                                  labelText: "Plate number",
+                                  inputColor: AppConstColors.primaryText,
+                                  fontSize: 18,
+                                  inputAction: .next,
+                                  textAlign: .center,
+                                  // prefixIcon: Icon(
+                                  //   Remix.id_card_fill,
+                                  //   size: 18,
+                                  //   color: AppConstColors.secondary,
+                                  // ),
+                                  hintText: "1 2 3",
+                                  maxLength: 4,
+                                  keyboardType: .number,
+                                  validator: (value) {
+                                    final text = value?.trim() ?? '';
+
+                                    if (text.isEmpty) {
+                                      return 'Numbers must not exceed 4 digits.';
+                                    }
+
+                                    final regex = RegExp(r'^[0-9٠-٩]{1,4}$');
+
+                                    if (!regex.hasMatch(text)) {
+                                      return 'Numbers must not exceed 4 digits.';
+                                    }
+
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              Expanded(
+                                child: AppTextFormField(
+                                  controller: driverCarLicensePlateLetters,
+                                  mainColor: AppConstColors.subSecondary,
+                                  labelText: "Plate letters",
+
+                                  inputColor: AppConstColors.primaryText,
+                                  fontSize: 18,
+                                  maxLength: 5,
+                                  inputFormatters: [
+                                    LicensePlateLettersFormatter(),
+                                  ],
+                                  keyboardType: TextInputType.text,
+                                  textAlign: TextAlign.center,
+                                  hintText: "أ ب ج",
+                                  validator: (value) {
+                                    final text =
+                                        value?.replaceAll(' ', '') ?? '';
+
+                                    if (text.isEmpty) {
+                                      return 'License plate is required';
+                                    }
+
+                                    if (!RegExp(r'^[\u0621-\u064A]{1,3}$')
+                                        .hasMatch(text)) {
+                                      return 'Enter up to 3 Arabic letters.';
+                                    }
+
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          ListenableBuilder(
+                            listenable: Listenable.merge([
+                              driverCarLicensePlateLetters,
+                              driverCarLicensePlateNumbers,
+                            ]),
+                            builder: (context, child) {
+                              return _buildEgyptianLicensePlate(
+                                letters: driverCarLicensePlateLetters.text,
+                                numbers: driverCarLicensePlateNumbers.text,
+                              );
+                            },
+                          ),
+
+                          CustomDivider(title: "Required Documents"),
+                          //upload required iamges
+                          _buildUploadSectionFormField(
+                            icon: Remix.id_card_fill,
+                            title: 'ID card (front face)',
+                            image: idCard,
+
+                            onTap: () async {
+                              context.read<LoadingProvider>().show();
+                              idCard = await imagePicker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (!context.mounted) return;
+                              context.read<LoadingProvider>().hide();
+                              setState(() {});
+                            },
+                          ),
+                          //criminal record
+                          _buildUploadSectionFormField(
+                            icon: Remix.file_paper_fill,
+                            title: 'criminal record',
+                            image: criminalRecord,
+                            onTap: () async {
+                              context.read<LoadingProvider>().show();
+
+                              criminalRecord = await imagePicker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (!context.mounted) return;
+                              context.read<LoadingProvider>().hide();
+                              setState(() {});
+                            },
+                          ),
+                          //driver license
+                          _buildUploadSectionFormField(
+                            icon: Remix.info_card_fill,
+                            title: 'driving license',
+                            image: drivingLicense,
+                            onTap: () async {
+                              context.read<LoadingProvider>().show();
+
+                              drivingLicense = await imagePicker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (!context.mounted) return;
+                              context.read<LoadingProvider>().hide();
+                              setState(() {});
+                            },
+                          ),
+                          CustomDivider(
+                            title: "Vehicle Images (${carImages.length} / 3)",
+                          ),
+
+                          _buildcarImagesSection(),
+
+                          //submit or back
+                          AppMainButton(
+                            onPressed: () async {
+                              if (!driverFormState.currentState!.validate() ||
+                                  idCard == null ||
+                                  criminalRecord == null ||
+                                  drivingLicense == null) {
+                                CherryToast.warning(
+                                  title: Text(
+                                    "missing fields & documents",
+                                    style: TextStyle(
+                                      color: AppConstColors.accent,
+                                    ),
+                                  ),
+                                  description: Text(
+                                    'please fill all required fields & uploading documents',
+                                  ),
+                                ).show(context);
+                                return;
+                              } else if (carImages.isEmpty) {
+                                CherryToast.warning(
+                                  title: Text(
+                                    "missing vehicle images",
+                                    style: TextStyle(
+                                      color: AppConstColors.accent,
+                                    ),
+                                  ),
+                                  description: Text('add at least 1 car image'),
+                                ).show(context);
+                                return;
+                              }
+                              try {
+                                context.read<LoadingProvider>().show();
+                                await submitUserBecomeAsDriverRequest(
+                                  userId: userId,
+                                  idCardFile: idCard!.path,
+                                  criminalRecordFile: criminalRecord!.path,
+                                  drivingLicenseFile: drivingLicense!.path,
+                                  carType: driverCarType.text,
+                                  carModel: driverCarModel.text,
+                                  carColor: driverCarColor.text,
+                                  licensePlate:
+                                      '${driverCarLicensePlateNumbers.text} ${driverCarLicensePlateLetters.text}',
+                                  carImagesUrl: carImages
+                                      .map((image) => image.path)
+                                      .toList(),
+                                );
+                                if (!context.mounted) return;
+
+                                CherryToast.success(
+                                  title: Text(
+                                    "done",
+                                    style: TextStyle(
+                                      color: AppConstColors.approved,
+                                    ),
+                                  ),
+                                  description: Text(
+                                    "your request now under review",
+                                  ),
+                                ).show(context);
+                                // set value for driver profile data
+                                final driver =
+                                    await DriverProfileServices.loadDriverProfileData();
+                                if (driver == null) return;
+                                if (!context.mounted) return;
+                                context
+                                        .read<DriverProfileProvider>()
+                                        .setDriverProfile =
+                                    driver;
+
+                                // clear fields
+                                idCard = criminalRecord = drivingLicense = null;
+                                carImages = [];
+                                driverCarModel.text = driverCarColor.text =
+                                    driverCarType.text = '';
+                                driverCarLicensePlateLetters.text =
+                                    driverCarLicensePlateNumbers.text = '';
+                                setState(() {
+                                  showBecomeDriverForm = false;
+                                });
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                CherryToast.error(
+                                  title: Text(
+                                    "Error",
+                                    style: TextStyle(
+                                      color: AppConstColors.error,
+                                    ),
+                                  ),
+                                  description: Text(e.toString()),
+                                ).show(context);
+                              } finally {
+                                if (context.mounted) {
+                                  context.read<LoadingProvider>().hide();
+                                }
+                              }
+                            },
+                            title: 'send request',
+                            mainColor: AppConstColors.subSecondary,
+                            icon: Remix.send_plane_line,
+                          ),
+                        ],
+                      ),
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Remix.information_line,
+                          color: AppConstColors.accent,
+                          size: 19,
+                        ),
+
+                        const SizedBox(width: 9),
+
+                        Expanded(
+                          child: Text(
+                            'You’ll need to provide your personal and vehicle information.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.black, height: 1.5),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+
+            const SizedBox(height: 18),
+            // Divider(),
+
+            if (!showBecomeDriverForm)
+              AppMainButton(
+                onPressed: () {
+                  setState(() {
+                    showBecomeDriverForm = true;
+                  });
+                },
+
+                title: 'Register as a Driver',
+                mainColor: AppConstColors.accent,
+                fontSize: 16,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1234,7 +1291,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     isProfilePictureChanged.value =
                         pickedImage.path != userProfilePictureUrl;
                   } catch (e) {
-                    CherryToast.error(description: Text(e.toString()));
+                    if (!context.mounted) return;
+                    CherryToast.error(description: Text(e.toString()))
+                        .show(context);
                   } finally {
                     if (context.mounted) {
                       context.read<LoadingProvider>().hide();
@@ -1334,7 +1393,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  Widget buildcarImagesSection() {
+  Widget _buildcarImagesSection() {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1350,12 +1409,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         if (index == 0 && carImages.length < 3) {
           return InkWell(
             onTap: showVehicleImagePicker,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                color: AppConstColors.input,
+                borderRadius: BorderRadius.circular(20),
               ),
               child: const Icon(Icons.add, size: 30, color: Colors.grey),
             ),
@@ -1372,7 +1430,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           fit: StackFit.expand,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(20),
               child: Image.file(File(image.path), fit: BoxFit.cover),
             ),
 
@@ -1401,20 +1459,277 @@ class _ProfileScreenState extends State<ProfileScreen>
       },
     );
   }
-}
 
-class HelpExpansionTile extends StatelessWidget {
-  const new({
-    super.key,
-    required this.icon,
-    required this.text,
-    required this.title,
-  });
-  final IconData icon;
-  final String title;
-  final String text;
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildDriverStatusCard({
+    required DriverApprovalStatus status,
+    String? rejectedReason,
+  }) {
+    final bool isApproved = status == DriverApprovalStatus.approved;
+    final bool isUnderReview = status == DriverApprovalStatus.underReview;
+
+    final Color primaryColor = isApproved
+        ? AppConstColors.approved
+        : isUnderReview
+        ? AppConstColors.subSecondary
+        : AppConstColors.error;
+
+    final IconData statusIcon = isApproved
+        ? Remix.shield_check_fill
+        : isUnderReview
+        ? Remix.time_fill
+        : Remix.file_close_fill;
+
+    final String title = isApproved
+        ? 'Driver Account Approved'
+        : isUnderReview
+        ? 'Application Under Review'
+        : 'Application Rejected';
+
+    final String subtitle = isApproved
+        ? 'You are ready to share your rides'
+        : isUnderReview
+        ? 'We are reviewing your application'
+        : 'Your application needs attention';
+
+    final String description = isApproved
+        ? 'Your driver application has been approved. You can now start offering rides and connect with passengers.'
+        : isUnderReview
+        ? 'Your application is currently being reviewed by our team. We will notify you once the review is complete.'
+        : 'Unfortunately, your driver application could not be approved.';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.6)),
+
+        boxShadow: [
+          BoxShadow(
+            color: AppConstColors.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(statusIcon, color: primaryColor, size: 24),
+            ),
+            title: Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: Colors.grey.shade600),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Description
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: Colors.grey.shade700, height: 1.5),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Status information
+          if (isApproved)
+            _buildStatusMessage(
+              color: primaryColor,
+              icon: Remix.check_double_line,
+              message: 'Your driver account is active.',
+            )
+          else if (isUnderReview)
+            _buildStatusMessage(
+              color: primaryColor,
+              icon: Remix.shield_check_line,
+              message: 'Your documents are being verified.',
+            )
+          else if (rejectedReason?.trim().isNotEmpty ?? false) ...[
+            Text(
+              'Reason for rejection',
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              rejectedReason!,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: Colors.grey.shade800, height: 1.5),
+            ),
+          ],
+
+          const SizedBox(height: 16),
+
+          if (!isApproved)
+            Column(
+              spacing: 8,
+              mainAxisAlignment: .center,
+              crossAxisAlignment: .center,
+              mainAxisSize: .min,
+              children: [
+                if (isUnderReview)
+                  AppMainButton(
+                    btnHeign: 44,
+                    showDecoration: false,
+                    onPressed: () async {
+                      try {
+                        final driverProfileApprovalStatusInProvider = context
+                            .read<DriverProfileProvider>()
+                            .driver!
+                            .approvalStatus;
+                        final driverProfileApprovalStatusInSupabase =
+                            await DriverProfileServices.getDriverApprovalStatus();
+                        if (driverProfileApprovalStatusInSupabase !=
+                            driverProfileApprovalStatusInProvider) {
+                          if (!mounted) return;
+
+                          context
+                                  .read<DriverProfileProvider>()
+                                  .setDriverProfile =
+                              await DriverProfileServices.loadDriverProfileData();
+                          if (!mounted) return;
+                          if (driverProfileApprovalStatusInSupabase ==
+                              .approved) {
+                            CherryToast.success(
+                              toastDuration: Duration(seconds: 4),
+                              title: Text(
+                                "Congratulations",
+                                style: TextStyle(
+                                  color: AppConstColors.approved,
+                                  fontWeight: .bold,
+                                ),
+                              ),
+                              description: Text(
+                                "Your application as a driver has been approved",
+                              ),
+                            ).show(context);
+                          } else {
+                            CherryToast.info(title: Text("response deliverd"))
+                                .show(context);
+                          }
+                          setState(() {});
+                          return;
+                        }
+                        if (!mounted) return;
+                        CherryToast.info(
+                          title: Text(
+                            "Still ${driverProfileApprovalStatusInSupabase.name}",
+                          ),
+                        ).show(context);
+                      } catch (e) {
+                        if (!mounted) return;
+                        CherryToast.error(
+                          title: Text("error"),
+                          description: Text(
+                            "try again, If the problem persists, restart the application.\n${e.toString()}",
+                          ),
+                          action: Text('restart app'),
+                          actionHandler: () => Phoenix.rebirth(context),
+                        ).show(context);
+                      }
+                    },
+
+                    title: 'Check Request Status',
+                    fontSize: 16,
+                  ),
+                AppMainButton(
+                  onPressed: () async {
+                    try {
+                      context.read<LoadingProvider>().show();
+                      await DriverProfileServices.deleteRequest();
+
+                      if (!mounted) return;
+
+                      context.read<DriverProfileProvider>().setDriverProfile =
+                          null;
+                      setState(() {});
+
+                      if (!mounted) return;
+                      CherryToast.success(
+                        title: Text("deleted successfully"),
+                        description: Text('you can now send another one'),
+                      ).show(context);
+                    } catch (e) {
+                      if (!mounted) return;
+                      CherryToast.error(
+                        title: Text("error"),
+                        description: Text(e.toString()),
+                        action: Text('try again'),
+                      ).show(context);
+                    } finally {
+                      if (mounted) {
+                        context.read<LoadingProvider>().hide();
+                      }
+                    }
+                  },
+                  title: 'delete request',
+                  mainColor: AppConstColors.error,
+                  isOutlined: true,
+                  btnHeign: 44,
+                  showDecoration: false,
+                  icon: Remix.delete_bin_2_line,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusMessage({
+    required Color color,
+    required IconData icon,
+    required String message,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 19),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpExpansionTile({
+    required IconData icon,
+    required String title,
+    required String text,
+  }) {
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
       leading: Icon(icon),
@@ -1423,36 +1738,30 @@ class HelpExpansionTile extends StatelessWidget {
       textColor: AppConstColors.subSecondary,
       children: [
         Padding(
-          padding: EdgeInsets.only(left: 16, right: 16, bottom: 12),
-          child: Text(text, style: TextTheme.of(context).labelMedium),
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+          child: Text(text, style: Theme.of(context).textTheme.labelMedium),
         ),
       ],
     );
   }
-}
 
-class ProfileInfoItem extends StatelessWidget {
-  const new({super.key, required this.text, required this.icon});
-  final String text;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildProfileInfoItem({required String text, required IconData icon}) {
     return Container(
-      padding: .all(4),
-      alignment: .center,
+      padding: const EdgeInsets.all(4),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppConstColors.white.withValues(alpha: .2),
-        borderRadius: .circular(20),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        mainAxisAlignment: .center,
+        mainAxisAlignment: MainAxisAlignment.center,
         spacing: 8,
         children: [
           Icon(icon, color: AppConstColors.accent, size: 16),
           Flexible(
             child: Text(
               text,
-              textAlign: .center,
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(color: AppConstColors.white, fontSize: 12),
             ),
@@ -1461,34 +1770,23 @@ class ProfileInfoItem extends StatelessWidget {
       ),
     );
   }
-}
 
-class UploadSectionFormField extends StatelessWidget {
-  const UploadSectionFormField({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.image,
-    super.key,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  final XFile? image;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildUploadSectionFormField({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    XFile? image,
+  }) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         color: AppConstColors.white.withValues(alpha: .3),
-        border: Border.all(color: AppConstColors.secondary, width: .3),
+        border: Border.all(color: AppConstColors.secondaryText, width: .3),
       ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-        leading: Icon(icon, size: 26, color: AppConstColors.secondary),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        leading: Icon(icon, size: 26, color: AppConstColors.subSecondary),
         title: Text(
           title,
           style: Theme.of(context).textTheme.labelMedium
@@ -1499,7 +1797,7 @@ class UploadSectionFormField extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: image != null
                 ? AppConstColors.approved
-                : AppConstColors.secondary,
+                : AppConstColors.subSecondary,
           ),
         ),
         trailing: image != null
@@ -1508,31 +1806,22 @@ class UploadSectionFormField extends StatelessWidget {
                 child: SizedBox(
                   width: 64,
                   height: 64,
-                  child: Image.file(File(image!.path), fit: BoxFit.cover),
+                  child: Image.file(File(image.path), fit: BoxFit.cover),
                 ),
               )
             : Icon(
                 Icons.upload_file_outlined,
-                color: AppConstColors.subSecondary,
+                color: AppConstColors.secondaryText,
                 size: 26,
               ),
       ),
     );
   }
-}
 
-class EgyptianLicensePlate extends StatelessWidget {
-  final String letters;
-  final String numbers;
-
-  const EgyptianLicensePlate({
-    super.key,
-    required this.letters,
-    required this.numbers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEgyptianLicensePlate({
+    required String letters,
+    required String numbers,
+  }) {
     return Container(
       width: 240,
       decoration: BoxDecoration(
@@ -1574,8 +1863,7 @@ class EgyptianLicensePlate extends StatelessWidget {
                 ],
               ),
             ),
-
-            Container(
+            Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               child: Row(
                 children: [
@@ -1595,7 +1883,6 @@ class EgyptianLicensePlate extends StatelessWidget {
                     height: 30,
                     color: Colors.grey.shade400,
                   ),
-
                   Expanded(
                     child: Text(
                       letters,
@@ -1633,7 +1920,6 @@ class LicensePlateLettersFormatter extends TextInputFormatter {
     );
 
     final limited = filtered.runes.take(3).toList();
-
     final formatted = limited.map(String.fromCharCode).join(' ');
 
     return TextEditingValue(

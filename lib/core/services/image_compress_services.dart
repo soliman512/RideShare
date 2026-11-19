@@ -5,9 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 class ImageCompressionService {
   static const int maxSizeBytes = 300 * 1024;
 
-  static Future<Uint8List> compressToWebp(
-    String imagePath,
-  ) async {
+  static Future<Uint8List> compressToWebp(String imagePath) async {
     const dimensions = [512, 384, 256];
     const qualities = [85, 75, 65, 55, 45];
 

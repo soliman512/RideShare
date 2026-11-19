@@ -10,7 +10,6 @@ import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/loading_provider.dart';
-import 'package:ride_share/core/providers/network_provider.dart';
 import 'package:ride_share/core/supabase_services/auth_services.dart';
 import 'package:ride_share/core/services/permission_service.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
@@ -216,7 +215,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                                 CherryToast.error(
                                   inheritThemeColors: true,
                                   description: Text(e.toString()),
-                                  animationType: AnimationType.fromTop,
+                                  animationType: AnimationType.fromLeft,
                                 ).show(context);
                               } finally {
                                 if (context.mounted) {
@@ -231,7 +230,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                                 description: const Text(
                                   'Please enable photo access',
                                 ),
-                                animationType: AnimationType.fromTop,
+                                animationType: AnimationType.fromLeft,
                                 action: const Text('request again'),
                                 actionHandler: () async {
                                   await PermissionService.requestGalleryPermission();
@@ -360,6 +359,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                       );
                       if (!context.mounted) return;
                       await context.read<AuthProvider>().loadUser();
+                      
                       if (!context.mounted) return;
                       Navigator.pushReplacementNamed(
                         context,
@@ -370,7 +370,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                       CherryToast.error(
                         inheritThemeColors: true,
                         description: Text(e.toString()),
-                        animationType: AnimationType.fromTop,
+                        animationType: AnimationType.fromLeft,
                       ).show(context);
                     } finally {
                       setState(() {

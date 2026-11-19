@@ -26,6 +26,9 @@ class AppTextFormField extends StatelessWidget {
     this.counterText = '',
     this.outLabel,
     this.inputFormatters,
+    this.mainColor,
+    this.filledColor,
+    this.isFilled,
   });
   final String? hintText;
   final String? labelText;
@@ -38,6 +41,7 @@ class AppTextFormField extends StatelessWidget {
   final bool obscureText;
   final int? maxLength;
   final bool? showCursor;
+  final bool? isFilled;
   final double? fontSize;
   final String? counterText;
   final FontWeight? fontWeight;
@@ -46,6 +50,8 @@ class AppTextFormField extends StatelessWidget {
   final FocusNode? focusNode;
   final FormFieldValidator<String>? validator;
   final String? outLabel;
+  final Color? mainColor;
+  final Color? filledColor;
   final List<TextInputFormatter>? inputFormatters;
   @override
   Widget build(BuildContext context) {
@@ -60,7 +66,7 @@ class AppTextFormField extends StatelessWidget {
               child: Text(
                 outLabel!,
                 style: TextTheme.of(context).labelSmall!
-                    .copyWith(color: AppConstColors.secondary),
+                    .copyWith(color: mainColor ?? AppConstColors.secondary),
               ),
             ),
           ),
@@ -93,8 +99,8 @@ class AppTextFormField extends StatelessWidget {
             labelStyle: Theme.of(context).textTheme.labelMedium!
                 .copyWith(color: AppConstColors.secondaryText, fontSize: 14),
 
-            filled: true,
-            fillColor: Color(0xFFe8ecf5),
+            filled: isFilled ?? true,
+            fillColor: filledColor ?? AppConstColors.input,
 
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -109,7 +115,7 @@ class AppTextFormField extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(20),
               borderSide: BorderSide(
-                color: AppConstColors.secondary,
+                color: mainColor ?? AppConstColors.secondary,
                 width: 1.6,
               ),
             ),

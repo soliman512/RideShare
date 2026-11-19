@@ -6,4 +6,4 @@ import 'package:ride_share/core/models/vehicle_model.dart';
 List<UserModel> usersTable = [];
 List<RideModel> rides = [];
 List<VehicleModel> vehicles = [];
-List<DriverModel> drivers = [];
+List<DriverProfileModel> drivers = [];

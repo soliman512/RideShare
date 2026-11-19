@@ -17,4 +17,5 @@ abstract class AppConstColors {
 
   static const Color error = Color(0xFFE40606);
   static const Color approved = Color(0xFF099340);
+  static const Color input = Color.fromARGB(255, 236, 239, 247);
 }

@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         "find a ride or share your journey",
                         textAlign: .center,
-                        style: Theme.of(context).textTheme.bodyLarge!
+                        style: Theme.of(context).textTheme.bodyMedium!
                             .copyWith(color: AppConstColors.secondaryText),
                       ),
                       SizedBox(height: 20),
@@ -249,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             CherryToast.error(
                               inheritThemeColors: true,
                               description: Text(e.message),
-                              animationType: AnimationType.fromTop,
+                              animationType: AnimationType.fromLeft,
                             ).show(context);
                           } catch (e) {
                             if (!context.mounted) return;
@@ -257,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             CherryToast.error(
                               inheritThemeColors: true,
                               description: Text(e.toString()),
-                              animationType: AnimationType.fromTop,
+                              animationType: AnimationType.fromLeft,
                             ).show(context);
                           } finally {
                             if (context.mounted) {
@@ -293,12 +293,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           alpha: .5,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                       // note
                       Text(
-                        "We'll send a verification code to your email\naddress.",
+                        "We'll send a verification code to your email address.",
                         textAlign: .center,
-                        style: Theme.of(context).textTheme.bodyLarge!
+                        style: Theme.of(context).textTheme.labelSmall!
                             .copyWith(color: AppConstColors.secondaryText),
                       ),
                       // TextButton(

@@ -124,13 +124,9 @@ class AppMainButton extends StatelessWidget {
                         color: contentColor,
                         strokeWidth: 2,
                       ),
-                    )
-                  else ...[
-                    icon != null
-                        ? Icon(icon, color: contentColor)
-                        : SizedBox.shrink(),
-                    // SizedBox(width: 20),
-                  ],
+                    ),
+                  if (icon != null) Icon(icon, color: contentColor),
+                  // SizedBox(width: 20),
                 ],
               ),
             ),

@@ -22,35 +22,39 @@ class NoInternetConnection extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: .center,
         crossAxisAlignment: .center,
+        spacing: 20,
         children: [
           Flexible(
-            child: Image.asset(
-              AppConstImages.noInternetConnection,
-              height: 200,
-              fit: BoxFit.contain,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: Image.asset(
+                AppConstImages.noInternetConnection,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
-          
-          
-          const Text(
-            'No Internet Connection',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppConstColors.primaryText,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          
-          
-          const Text(
-            'Unable to connect to the server. Please check your internet connection and try again.',
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.6,
-              color: AppConstColors.secondaryText,
-            ),
-            textAlign: TextAlign.center,
+          Column(
+            spacing: 4,
+            children: [
+              Text(
+                'No Internet Connection',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppConstColors.primaryText,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                'Unable to connect to the server. Please check your internet connection and try again.',
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.6,
+                  color: AppConstColors.secondaryText,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
           AppMainButton(
             onPressed: onRetry,

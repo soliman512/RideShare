@@ -1,13 +1,8 @@
-enum DriverApprovalStatus {
-  underReview,
-  approved,
-  rejected,
-}
+enum DriverApprovalStatus { underReview, approved, rejected }
 
 extension DriverApprovalStatusX on DriverApprovalStatus {
   String get dbValue {
     switch (this) {
-    
       case DriverApprovalStatus.underReview:
         return 'under_review';
 
@@ -21,7 +16,6 @@ extension DriverApprovalStatusX on DriverApprovalStatus {
 
   static DriverApprovalStatus fromDb(String value) {
     switch (value) {
-   
       case 'under_review':
         return DriverApprovalStatus.underReview;
 
@@ -32,9 +26,7 @@ extension DriverApprovalStatusX on DriverApprovalStatus {
         return DriverApprovalStatus.rejected;
 
       default:
-        throw FormatException(
-          'Unknown driver approval status: $value',
-        );
+        return DriverApprovalStatus.underReview;
     }
   }
 }

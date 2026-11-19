@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/current_page_provider.dart';
@@ -64,20 +64,26 @@ class _MainScaffoldState extends State<MainScaffold> {
         },
 
         activeIcons: const [
-          Icon(Remix.home_6_fill, color: Colors.white),
-          Icon(Remix.file_paper_2_fill, color: Colors.white),
-          Icon(Remix.account_circle_fill, color: Colors.white),
+          PhosphorIcon(PhosphorIconsFill.house, color: Colors.white),
+          PhosphorIcon(PhosphorIconsFill.path, color: Colors.white),
+          PhosphorIcon(PhosphorIconsFill.user, color: Colors.white),
         ],
         inactiveIcons: [
           Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 2,
             children: [
-              Icon(Remix.home_6_fill, color: Colors.white, size: 16),
+              PhosphorIcon(
+                PhosphorIconsLight.house,
+                size: 22,
+                color: AppConstColors.primary.withValues(alpha: .8),
+              ),
               Text(
                 "Home",
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: Colors.white),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppConstColors.primary.withValues(alpha: .8),
+                  fontWeight: .w100,
+                ),
               ),
             ],
           ),
@@ -86,11 +92,17 @@ class _MainScaffoldState extends State<MainScaffold> {
             mainAxisSize: MainAxisSize.min,
             spacing: 2,
             children: [
-              Icon(Remix.file_paper_2_fill, color: Colors.white, size: 16),
+              PhosphorIcon(
+                PhosphorIconsLight.path,
+                size: 22,
+                color: AppConstColors.primary.withValues(alpha: .8),
+              ),
               Text(
                 "Trips",
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: Colors.white),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppConstColors.primary.withValues(alpha: .8),
+                  fontWeight: .w100,
+                ),
               ),
             ],
           ),
@@ -99,11 +111,17 @@ class _MainScaffoldState extends State<MainScaffold> {
             mainAxisSize: MainAxisSize.min,
             spacing: 2,
             children: [
-              Icon(Remix.account_circle_fill, color: Colors.white, size: 16),
+              PhosphorIcon(
+                PhosphorIconsLight.user,
+                size: 22,
+                color: AppConstColors.primary.withValues(alpha: .8),
+              ),
               Text(
                 "Profile",
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: Colors.white),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppConstColors.primary.withValues(alpha: .8),
+                  fontWeight: .w100,
+                ),
               ),
             ],
           ),
@@ -114,13 +132,13 @@ class _MainScaffoldState extends State<MainScaffold> {
         circleWidth: 60,
 
         // tabCurve: ,
-        padding: .zero,
-        // cornerRadius: const BorderRadius.only(
-        //   topLeft: Radius.circular(0),
-        //   topRight: Radius.circular(0),
-        //   bottomRight: Radius.circular(0),
-        //   bottomLeft: Radius.circular(0),
-        // ),
+        padding: .all(4),
+        cornerRadius: const BorderRadius.only(
+          topLeft: Radius.circular(10),
+          topRight: Radius.circular(10),
+          bottomRight: Radius.circular(40),
+          bottomLeft: Radius.circular(40),
+        ),
         shadowColor: const Color.fromARGB(255, 191, 197, 204),
         circleShadowColor: const Color.fromARGB(255, 191, 197, 204),
         elevation: 10,
@@ -134,13 +152,9 @@ class _MainScaffoldState extends State<MainScaffold> {
           ],
         ),
         circleGradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            AppConstColors.secondary,
-            AppConstColors.secondary,
-            AppConstColors.subSecondary,
-          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppConstColors.secondary, AppConstColors.subSecondary],
         ),
         activeIndex: currentPage,
       ),

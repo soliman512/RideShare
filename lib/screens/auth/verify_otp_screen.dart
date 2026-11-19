@@ -9,8 +9,11 @@ import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
+import 'package:ride_share/core/extension/driver_approval_status_extension.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
+import 'package:ride_share/core/providers/driver_profile_provider.dart';
 import 'package:ride_share/core/supabase_services/auth_services.dart';
+import 'package:ride_share/core/supabase_services/driver_profile_services.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/app_text_form_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -215,6 +218,10 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         onPressed: timer.value == 0
                             ? () async {
                                 try {
+                                  setState(() {
+                                    timer.value = 59;
+                                    resendInTimer();
+                                  });
                                   await AuthServices.signInWithEmailOtp(
                                     userEmail!,
                                   );
@@ -222,14 +229,11 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                   if (!context.mounted) return;
                                   CherryToast.error(
                                     inheritThemeColors: true,
+                                    title: Text('try again'),
                                     description: Text(e.toString()),
-                                    animationType: AnimationType.fromTop,
+                                    animationType: AnimationType.fromLeft,
                                   ).show(context);
                                 }
-                                setState(() {
-                                  timer.value = 59;
-                                  resendInTimer();
-                                });
                               }
                             : null,
 
@@ -309,6 +313,21 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           if (await AuthServices.isUserProfileExists()) {
                             if (!context.mounted) return;
                             await context.read<AuthProvider>().loadUser();
+                            if (await DriverProfileServices.isUserHasDriverProfile()) {
+                              if (!context.mounted) return;
+                              final driver =
+                                  await DriverProfileServices.loadDriverProfileData();
+                              if (driver == null) return;
+                              if (!context.mounted) return;
+
+                              context
+                                      .read<DriverProfileProvider>()
+                                      .setDriverProfile =
+                                  driver;
+                //                     context.read<DriverProfileProvider>().setCanBecomeDriver =
+                // driver.approvalStatus == DriverApprovalStatus.approved;
+                            }
+
                             if (!context.mounted) return;
 
                             Navigator.pushReplacementNamed(
@@ -329,14 +348,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           CherryToast.error(
                             inheritThemeColors: true,
                             description: Text(e.message.toString()),
-                            animationType: AnimationType.fromTop,
+                            animationType: AnimationType.fromLeft,
                           ).show(context);
                         } catch (e) {
                           if (!context.mounted) return;
                           CherryToast.error(
                             inheritThemeColors: true,
                             description: Text(e.toString()),
-                            animationType: AnimationType.fromTop,
+                            animationType: AnimationType.fromLeft,
                           ).show(context);
                         } finally {
                           setState(() {

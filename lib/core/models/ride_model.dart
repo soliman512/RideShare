@@ -16,7 +16,7 @@ class RideModel {
   final double distance;
 
   // Driver
-  final DriverModel driver;
+  final DriverProfileModel driver;
   //riders
   final List<UserModel> riders;
 

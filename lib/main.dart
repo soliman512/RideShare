@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/providers/app_info_provider.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/current_page_provider.dart';
+import 'package:ride_share/core/providers/driver_profile_provider.dart';
 import 'package:ride_share/core/providers/loading_provider.dart';
 import 'package:ride_share/core/providers/network_provider.dart';
 import 'package:ride_share/screens/auth/login_screen.dart';
@@ -46,11 +48,12 @@ void main() async {
           ChangeNotifierProvider(create: (_) => LoadingProvider()),
           ChangeNotifierProvider(create: (_) => CurrentPageProvider()),
           ChangeNotifierProvider(create: (_) => AppInfoProvider()),
+          ChangeNotifierProvider(create: (_) => DriverProfileProvider()),
           ChangeNotifierProvider(
             create: (_) => NetworkProvider()..startMonitoring(),
           ),
         ],
-        child: const MyApp(),
+        child: Phoenix(child: const MyApp()),
       ),
     ),
   );

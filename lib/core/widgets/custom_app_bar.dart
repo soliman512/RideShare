@@ -6,7 +6,10 @@ import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/current_page_provider.dart';
+import 'package:ride_share/core/providers/driver_profile_provider.dart';
+import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/app_name.dart';
+import 'package:ride_share/core/widgets/show_app_modal_sheet.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const new({super.key, required this.isThereNotifications});
@@ -20,6 +23,9 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   @override
   Widget build(BuildContext context) {
+    final bool isCanBecomeAsDriver = context
+        .watch<DriverProfileProvider>()
+        .canBecomeDriver;
     bool isDriver =
         context.watch<AuthProvider>().currentUserMode == UserMode.driver;
     bool hideSwitcher =
@@ -193,124 +199,120 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                         ),
                                   ),
                                 ],
-                              ), 
+                              ),
                             ),
                           ),
                           // driver tab
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
-                                //TODO don't forget make the lines un comment (stop logic just for test)
-                                // if (isDriver == false) {
-                                  // if (context
-                                  //         .read<AuthProvider>()
-                                  //         .canBecomeDriver ==
-                                  //     true) {
+                                if (isDriver == false) {
+                                  if (isCanBecomeAsDriver == true) {
                                     context.read<AuthProvider>().setMode =
                                         UserMode.driver;
-                                  // } else {
-                                  //   //show info modal to become as a driver
-                                  //   showAppModalSheet(
-                                  //     context,
-                                  //     spacing: 12,
-                                  //     children: [
-                                  //       // Header
-                                  //       const SizedBox(width: 14),
-                                  //       Text(
-                                  //         'Become a Driver',
-                                  //         style: Theme.of(context)
-                                  //             .textTheme
-                                  //             .titleLarge
-                                  //             ?.copyWith(
-                                  //               fontWeight: FontWeight.w700,
-                                  //               color:
-                                  //                   AppConstColors.primaryText,
-                                  //             ),
-                                  //       ),
-                                  //       Text(
-                                  //         'Start offering rides and earn with your vehicle.',
-                                  //         style: Theme.of(context)
-                                  //             .textTheme
-                                  //             .labelMedium
-                                  //             ?.copyWith(
-                                  //               color: AppConstColors
-                                  //                   .secondaryText,
-                                  //             ),
-                                  //       ),
+                                  } else {
+                                    //show info modal to become as a driver
+                                    showAppModalSheet(
+                                      context,
+                                      spacing: 12,
+                                      children: [
+                                        // Header
+                                        const SizedBox(width: 14),
+                                        Text(
+                                          'Become a Driver',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color:
+                                                    AppConstColors.primaryText,
+                                              ),
+                                        ),
+                                        Text(
+                                          'Start offering rides and earn with your vehicle.',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium
+                                              ?.copyWith(
+                                                color: AppConstColors
+                                                    .secondaryText,
+                                              ),
+                                        ),
 
-                                  //       // Steps
-                                  //       Padding(
-                                  //         padding: const EdgeInsets.all(8.0),
-                                  //         child: Row(
-                                  //           children: [
-                                  //             _StepItem(
-                                  //               icon: Remix.user_3_fill,
-                                  //               label: 'Profile',
-                                  //               isActive: false,
-                                  //             ),
+                                        // Steps
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            children: [
+                                              _StepItem(
+                                                icon: Remix.user_3_fill,
+                                                label: 'Profile',
+                                                isActive: false,
+                                              ),
 
-                                  //             Expanded(
-                                  //               child: Padding(
-                                  //                 padding:
-                                  //                     const EdgeInsets.symmetric(
-                                  //                       horizontal: 10,
-                                  //                     ),
-                                  //                 child: Divider(
-                                  //                   thickness: 1.2,
-                                  //                   color:
-                                  //                       AppConstColors.border,
-                                  //                 ),
-                                  //               ),
-                                  //             ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                      ),
+                                                  child: Divider(
+                                                    thickness: 1.2,
+                                                    color:
+                                                        AppConstColors.border,
+                                                  ),
+                                                ),
+                                              ),
 
-                                  //             _StepItem(
-                                  //               icon: Remix.car_fill,
-                                  //               label: 'Driver Registration',
-                                  //               isActive: true,
-                                  //             ),
-                                  //           ],
-                                  //         ),
-                                  //       ),
+                                              _StepItem(
+                                                icon: Remix.car_fill,
+                                                label: 'Driver Registration',
+                                                isActive: true,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
 
-                                  //       // Information
-                                  //       Padding(
-                                  //         padding: const .symmetric(
-                                  //           horizontal: 16,
-                                  //         ),
-                                  //         child: Text(
-                                  //           'Complete your driver registration from your profile to unlock driver features.',
-                                  //           textAlign: TextAlign.center,
-                                  //           style: Theme.of(context)
-                                  //               .textTheme
-                                  //               .labelMedium
-                                  //               ?.copyWith(
-                                  //                 height: 1.5,
-                                  //                 color: AppConstColors
-                                  //                     .secondaryText,
-                                  //               ),
-                                  //         ),
-                                  //       ),
+                                        // Information
+                                        Padding(
+                                          padding: const .symmetric(
+                                            horizontal: 16,
+                                          ),
+                                          child: Text(
+                                            'Complete your driver registration from your profile to unlock driver features.',
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelMedium
+                                                ?.copyWith(
+                                                  height: 1.5,
+                                                  color: AppConstColors
+                                                      .secondaryText,
+                                                ),
+                                          ),
+                                        ),
 
-                                  //       AppMainButton(
-                                  //         title: 'to profile',
-                                  //         icon: Remix.arrow_right_line,
-                                  //         mainColor: AppConstColors.accent,
-                                  //         onPressed: () {
-                                  //           Navigator.pop(context);
-                                  //           context
-                                  //                   .read<CurrentPageProvider>()
-                                  //                   .setCurrentPage =
-                                  //               2;
-                                  //         },
-                                  //       ),
-                                  //     ],
-                                  //   );
-                                  // }
+                                        AppMainButton(
+                                          title: 'to profile',
+                                          icon: Remix.arrow_right_line,
+                                          mainColor: AppConstColors.accent,
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            context
+                                                    .read<CurrentPageProvider>()
+                                                    .setCurrentPage =
+                                                2;
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  }
 
-                                  // setState(() {
-                                  //   isDriver = true;
-                                  // });
-                                // }
+                                  setState(() {
+                                    isDriver = true;
+                                  });
+                                }
                               },
                               child: Row(
                                 spacing: 4,
@@ -352,32 +354,32 @@ class _CustomAppBarState extends State<CustomAppBar> {
   }
 }
 
-// class _StepItem extends StatelessWidget {
-//   const _StepItem({
-//     required this.icon,
-//     required this.label,
-//     required this.isActive,
-//   });
+class _StepItem extends StatelessWidget {
+  const _StepItem({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+  });
 
-//   final IconData icon;
-//   final String label;
-//   final bool isActive;
+  final IconData icon;
+  final String label;
+  final bool isActive;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final color = isActive ? AppConstColors.accent : AppConstColors.primaryText;
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? AppConstColors.accent : AppConstColors.primaryText;
 
-//     return Row(
-//       mainAxisSize: MainAxisSize.min,
-//       children: [
-//         Icon(icon, size: 17, color: color),
-//         const SizedBox(width: 6),
-//         Text(
-//           label,
-//           style: Theme.of(context).textTheme.labelLarge
-//               ?.copyWith(color: color, fontWeight: FontWeight.w600),
-//         ),
-//       ],
-//     );
-//   }
-// }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 17, color: color),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: color, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}

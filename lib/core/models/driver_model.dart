@@ -7,8 +7,8 @@ import 'package:ride_share/core/extension/driver_approval_status_extension.dart'
 //   rejected
 // }
 
-class DriverModel {
-  const DriverModel({
+class DriverProfileModel {
+  const DriverProfileModel({
     required this.id,
     required this.userId,
     required this.idCardUrl,
@@ -53,8 +53,8 @@ class DriverModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  factory DriverModel.fromJson(Map<String, dynamic> json) {
-    return DriverModel(
+  factory DriverProfileModel.fromJson(Map<String, dynamic> json) {
+    return DriverProfileModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
 

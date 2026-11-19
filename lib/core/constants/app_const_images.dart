@@ -17,6 +17,8 @@ abstract class AppConstImages {
       "$_path/illustration/no_internet_connection.png";
   static const String trust =
       "$_path/illustration/trust.png";
+  static const String oops =
+      "$_path/illustration/oops.png";
 
   // ************************ GIFs **************************
   static const String verifyEmailGif = "$_path/illustration/verify_email.gif";
