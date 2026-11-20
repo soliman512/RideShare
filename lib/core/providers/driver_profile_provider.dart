@@ -18,6 +18,8 @@ class DriverProfileProvider extends ChangeNotifier {
   set setDriverProfile(DriverProfileModel? profileModel) {
     _driver = profileModel;
     setCanBecomeDriver = _driver?.approvalStatus == .approved;
+    notifyListeners();
+    
   }
   // ==================== Load Driver Profile ====================
 

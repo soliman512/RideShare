@@ -9,7 +9,6 @@ import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_const_colors.dart';
 import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
-import 'package:ride_share/core/extension/driver_approval_status_extension.dart';
 import 'package:ride_share/core/providers/auth_provider.dart';
 import 'package:ride_share/core/providers/driver_profile_provider.dart';
 import 'package:ride_share/core/supabase_services/auth_services.dart';

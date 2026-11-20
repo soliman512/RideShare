@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:intl/intl.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ride_share/core/extension/driver_approval_status_extension.dart';
-import 'package:ride_share/core/models/driver_model.dart';
-import 'package:ride_share/core/providers/current_page_provider.dart';
 import 'package:ride_share/core/providers/driver_profile_provider.dart';
 import 'package:ride_share/core/services/driver_storage_services.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             imagePath: newUserProfilePicture!.path,
           );
         } else {
-          await AuthServices.updateUserProfilePicture(
+          profilePictureUrl = await AuthServices.updateUserProfilePicture(
             userId: user.id,
             newImage: newUserProfilePicture!,
             oldImageUrl: oldImageUrl,
@@ -110,11 +110,50 @@ class _ProfileScreenState extends State<ProfileScreen>
         phone: newUserPhoneNumberContoller.text.trim(),
         profilePictureUrl: profilePictureUrl,
       );
-
       // 3. Reload updated user data.
       await authProvider.loadUser();
 
       newUserProfilePicture = null;
+
+      if (!mounted) return;
+
+      CherryToast.success(
+        inheritThemeColors: true,
+        description: const Text('Your data has been updated.'),
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+    } catch (e, stackTrace) {
+      debugPrint('Update user data error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+
+      CherryToast.error(
+        inheritThemeColors: true,
+        description: const Text('There is a problem, try again later.'),
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+    } finally {
+      loadingProvider.hide();
+    }
+  }
+
+  Future<void> removeUserProfilePicture() async {
+    final loadingProvider = context.read<LoadingProvider>();
+    final authProvider = context.read<AuthProvider>();
+
+    loadingProvider.show();
+
+    try {
+      final user = authProvider.user!;
+
+      await AuthServices.updateUserData(
+        userId: user.id,
+        fullName: newUserFullNameController.text.trim(),
+        phone: newUserPhoneNumberContoller.text.trim(),
+        profilePictureUrl: null,
+      );
+      await authProvider.loadUser();
 
       if (!mounted) return;
 
@@ -613,15 +652,20 @@ class _ProfileScreenState extends State<ProfileScreen>
             _becomeAsDriverBoxAndForm(context, userId)
           else
             switch (driverProfile.approvalStatus) {
-              DriverApprovalStatus.underReview => _buildDriverStatusCard(
-                status: .underReview,
-              ),
-              DriverApprovalStatus.rejected => _buildDriverStatusCard(
-                status: .rejected,
+              DriverApprovalStatus.underReview => _buildUnderReviewStatusCard(),
+              DriverApprovalStatus.rejected => _buildRejectedStatusCard(
                 rejectedReason: driverProfile.rejectedReason,
               ),
-              DriverApprovalStatus.approved => _buildDriverStatusCard(
-                status: .approved,
+              DriverApprovalStatus.approved => _buildApprovedStatusCard(
+                approvedAt: DateFormat(DateFormat.YEAR_MONTH_DAY)
+                    .format(driverProfile.approvedAt ?? DateTime.now()),
+                carColor: driverProfile.carColor,
+                carModel: driverProfile.carModel,
+                carType: driverProfile.carType,
+                driverRating: driverProfile.driverRating,
+                licensePlate: driverProfile.licensePlate,
+                onWalletPressed: () {},
+                totalRides: driverProfile.totalRides,
               ),
             },
           //actions
@@ -684,6 +728,87 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
 
           const SizedBox(height: 8),
+          if (driverProfile?.approvalStatus == .approved)
+            //logout button
+            AppMainButton(
+              onPressed: () => showAppModalSheet(
+                context,
+                children: [
+                  Text(
+                    'Delete Driver Profile?',
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(color: AppConstColors.error),
+                  ),
+                  Text(
+                    'Your application and all uploaded documents will be permanently deleted. You will need to submit them again if you apply in the future.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: Colors.grey),
+                  ),
+                  AppMainButton(
+                    onPressed: () async {
+                      try {
+                        context.read<LoadingProvider>().show();
+
+                        await DriverProfileServices.deleteRequest();
+
+                        if (!context.mounted) return;
+
+                        context.read<DriverProfileProvider>().setDriverProfile =
+                            null;
+
+                        context
+                                .read<DriverProfileProvider>()
+                                .setCanBecomeDriver =
+                            false;
+                        context.read<AuthProvider>().currentUserMode ==
+                            UserMode.rider;
+
+                        CherryToast.success(
+                          inheritThemeColors: true,
+                          description: const Text(
+                            'Your driver application has been deleted successfully.',
+                          ),
+                          animationType: AnimationType.fromLeft,
+                        ).show(context);
+
+                        Navigator.pop(context);
+                      } catch (e) {
+                        if (!context.mounted) return;
+
+                        CherryToast.error(
+                          inheritThemeColors: true,
+                          description: const Text(
+                            'Failed to delete your driver application. Please try again later.',
+                          ),
+                          animationType: AnimationType.fromLeft,
+                        ).show(context);
+                      } finally {
+                        if (context.mounted) {
+                          context.read<LoadingProvider>().hide();
+                        }
+                      }
+                    },
+                    title: 'Yes, Delete',
+                    icon: Remix.delete_bin_line,
+                    mainColor: AppConstColors.error,
+                    btnHeign: 44,
+                  ),
+                  AppMainButton(
+                    onPressed: () => Navigator.pop(context),
+                    title: 'Cancel',
+                    mainColor: AppConstColors.accent,
+                    isOutlined: true,
+                    btnHeign: 44,
+                  ),
+                ],
+              ),
+              title: "delete your driver profile",
+              mainColor: AppConstColors.accent,
+              showDecoration: false,
+              btnHeign: 44,
+              isOutlined: true,
+            ),
 
           //logout button
           AppMainButton(
@@ -860,7 +985,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             labelText: "car type",
                             controller: driverCarType,
                             inputColor: AppConstColors.primaryText,
-                            fontSize: 18,
+                            fontSize: 16,
                             inputAction: .next,
                             mainColor: AppConstColors.subSecondary,
 
@@ -887,7 +1012,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           AppTextFormField(
                             controller: driverCarModel,
                             inputColor: AppConstColors.primaryText,
-                            fontSize: 18,
+                            fontSize: 16,
                             inputAction: .next,
                             mainColor: AppConstColors.subSecondary,
                             labelText: "car model",
@@ -914,7 +1039,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           AppTextFormField(
                             controller: driverCarColor,
                             inputColor: AppConstColors.primaryText,
-                            fontSize: 18,
+                            fontSize: 16,
                             inputAction: .next,
                             mainColor: AppConstColors.subSecondary,
                             labelText: "car color",
@@ -949,7 +1074,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   mainColor: AppConstColors.subSecondary,
                                   labelText: "Plate number",
                                   inputColor: AppConstColors.primaryText,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   inputAction: .next,
                                   textAlign: .center,
                                   // prefixIcon: Icon(
@@ -984,7 +1109,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   labelText: "Plate letters",
 
                                   inputColor: AppConstColors.primaryText,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   maxLength: 5,
                                   inputFormatters: [
                                     LicensePlateLettersFormatter(),
@@ -1235,7 +1360,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final phoneNumber = newUserPhoneNumberContoller.text.trim();
 
     final isProfilePictureChanged = ValueNotifier<bool>(false);
-
+    newUserProfilePicture = null;
     try {
       await showAppModalSheet(
         context,
@@ -1252,7 +1377,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
 
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            spacing: 8,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ValueListenableBuilder<bool>(
@@ -1260,22 +1385,24 @@ class _ProfileScreenState extends State<ProfileScreen>
                 builder: (context, changed, child) {
                   return CircleAvatar(
                     radius: 36,
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest,
+                    backgroundColor: AppConstColors.input,
                     backgroundImage: changed && newUserProfilePicture != null
                         ? FileImage(File(newUserProfilePicture!.path))
                         : userProfilePictureUrl != null
                         ? NetworkImage(userProfilePictureUrl)
                         : null,
                     child: !changed && userProfilePictureUrl == null
-                        ? const Icon(Remix.user_line, size: 32)
+                        ? const Icon(
+                            Remix.user_line,
+                            color: AppConstColors.secondary,
+                            size: 32,
+                          )
                         : null,
                   );
                 },
               ),
-
-              ElevatedButton(
+              Spacer(),
+              IconButton(
                 onPressed: () async {
                   context.read<LoadingProvider>().show();
 
@@ -1300,19 +1427,41 @@ class _ProfileScreenState extends State<ProfileScreen>
                     }
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+
+                icon: PhosphorIcon(
+                  PhosphorIconsFill.cameraRotate,
+                  color: AppConstColors.secondary,
                 ),
-                child: const Text('Select New Picture'),
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  CherryToast.info(
+                    toastDuration: Duration(seconds: 8),
+                    title: Text(
+                      "remove profile picture ?",
+                      style: TextTheme.of(context).labelLarge!.copyWith(
+                        color: AppConstColors.primaryText,
+                        fontWeight: .bold,
+                      ),
+                    ),
+
+                    action: Text(
+                      'remove',
+                      style: TextTheme.of(context).labelLarge!.copyWith(
+                        color: AppConstColors.error,
+                        fontWeight: .bold,
+                      ),
+                    ),
+                    actionHandler: () async {
+                      await removeUserProfilePicture();
+                    },
+                  ).show(context);
+                },
+                icon: PhosphorIcon(
+                  PhosphorIconsLight.trash,
+                  color: AppConstColors.error,
+                ),
               ),
             ],
           ),
@@ -1460,49 +1609,256 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildDriverStatusCard({
-    required DriverApprovalStatus status,
-    String? rejectedReason,
+  Widget _buildApprovedStatusCard({
+    required double driverRating,
+    required int totalRides,
+    required String approvedAt,
+    required String carType,
+    required String carModel,
+    required String carColor,
+    required String licensePlate,
+    required VoidCallback onWalletPressed,
   }) {
-    final bool isApproved = status == DriverApprovalStatus.approved;
-    final bool isUnderReview = status == DriverApprovalStatus.underReview;
+    final theme = Theme.of(context);
 
-    final Color primaryColor = isApproved
-        ? AppConstColors.approved
-        : isUnderReview
-        ? AppConstColors.subSecondary
-        : AppConstColors.error;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Approved Account
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppConstColors.accent.withValues(alpha: .15),
+                AppConstColors.accent.withValues(alpha: .05),
+              ],
+            ),
+            border: .all(color: AppConstColors.accent, width: 1),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            spacing: 12,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppConstColors.accent.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Remix.shield_check_fill,
+                    color: AppConstColors.accent,
+                    size: 25,
+                  ),
+                ),
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  'Approved Driver',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppConstColors.primaryText,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  'Approved on $approvedAt\n'
+                  'Your driver account is approved. You can now offer rides and earn money.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppConstColors.secondaryText,
+                  ),
+                ),
+              ),
+              // Text(
+              //   ,
+              //   style: theme.textTheme.bodySmall?.copyWith(
+              //     color: AppConstColors.primaryText,
+              //   ),
+              // ),
 
-    final IconData statusIcon = isApproved
-        ? Remix.shield_check_fill
-        : isUnderReview
-        ? Remix.time_fill
-        : Remix.file_close_fill;
+              AppMainButton(
+                onPressed: onWalletPressed,
+                title: 'My Wallet',
+                mainColor: AppConstColors.accent,
+                btnHeign: 46,
+                isOutlined: true,
+                icon: Remix.wallet_3_line,
+              ),
+            ],
+          ),
+        ),
 
-    final String title = isApproved
-        ? 'Driver Account Approved'
-        : isUnderReview
-        ? 'Application Under Review'
-        : 'Application Rejected';
+        const SizedBox(height: 16),
 
-    final String subtitle = isApproved
-        ? 'You are ready to share your rides'
-        : isUnderReview
-        ? 'We are reviewing your application'
-        : 'Your application needs attention';
+        // Driver Statistics
+        Row(
+          children: [
+            Expanded(
+              child: _buildDriverStat(
+                icon: Remix.star_fill,
+                value: driverRating.toStringAsFixed(1),
+                label: 'Driver Rating',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDriverStat(
+                icon: Remix.car_fill,
+                value: totalRides.toString(),
+                label: 'Completed Rides',
+              ),
+            ),
+          ],
+        ),
 
-    final String description = isApproved
-        ? 'Your driver application has been approved. You can now start offering rides and connect with passengers.'
-        : isUnderReview
-        ? 'Your application is currently being reviewed by our team. We will notify you once the review is complete.'
-        : 'Unfortunately, your driver application could not be approved.';
+        const SizedBox(height: 22),
+
+        // Vehicle Details
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppConstColors.subSecondary.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Your Vehicle',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppConstColors.subSecondary,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Remix.checkbox_circle_fill,
+                    color: AppConstColors.approved,
+                    size: 17,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    'reviewed',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppConstColors.approved,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildVehicleTableRow('Car Type', carType),
+              _buildVehicleTableRow('Model', carModel),
+              _buildVehicleTableRow('Color', carColor),
+              _buildVehicleTableRow('License Plate', licensePlate),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDriverStat({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppConstColors.accent.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppConstColors.accent, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                value,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppConstColors.accent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppConstColors.secondaryText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVehicleTableRow(String label, String value) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: AppConstColors.subSecondary.withValues(alpha: 0.2),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppConstColors.primaryText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppConstColors.secondaryText,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnderReviewStatusCard() {
+    const Color primaryColor = AppConstColors.subSecondary;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: primaryColor.withValues(alpha: 0.6)),
-
         boxShadow: [
           BoxShadow(
             color: AppConstColors.shadow.withValues(alpha: 0.04),
@@ -1514,7 +1870,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Container(
@@ -1523,15 +1878,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                 color: primaryColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(statusIcon, color: primaryColor, size: 24),
+              child: Icon(Remix.time_fill, color: primaryColor, size: 24),
             ),
             title: Text(
-              title,
+              'Application Under Review',
               style: Theme.of(context).textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             subtitle: Text(
-              subtitle,
+              'We are reviewing your application',
               style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: Colors.grey.shade600),
             ),
@@ -1539,29 +1894,217 @@ class _ProfileScreenState extends State<ProfileScreen>
 
           const SizedBox(height: 8),
 
-          // Description
           Text(
-            description,
+            'Your application is currently being reviewed by our team. We will notify you once the review is complete.',
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: Colors.grey.shade700, height: 1.5),
           ),
 
           const SizedBox(height: 16),
 
-          // Status information
-          if (isApproved)
-            _buildStatusMessage(
-              color: primaryColor,
-              icon: Remix.check_double_line,
-              message: 'Your driver account is active.',
-            )
-          else if (isUnderReview)
-            _buildStatusMessage(
-              color: primaryColor,
-              icon: Remix.shield_check_line,
-              message: 'Your documents are being verified.',
-            )
-          else if (rejectedReason?.trim().isNotEmpty ?? false) ...[
+          _buildStatusMessage(
+            color: primaryColor,
+            icon: Remix.shield_check_line,
+            message: 'Your documents are being verified.',
+          ),
+
+          const SizedBox(height: 16),
+
+          Column(
+            spacing: 8,
+            mainAxisAlignment: .center,
+            crossAxisAlignment: .center,
+            mainAxisSize: .min,
+            children: [
+              AppMainButton(
+                btnHeign: 44,
+                showDecoration: false,
+                onPressed: () async {
+                  try {
+                    final driverProfileApprovalStatusInProvider = context
+                        .read<DriverProfileProvider>()
+                        .driver!
+                        .approvalStatus;
+
+                    final driverProfileApprovalStatusInSupabase =
+                        await DriverProfileServices.getDriverApprovalStatus();
+
+                    if (driverProfileApprovalStatusInSupabase !=
+                        driverProfileApprovalStatusInProvider) {
+                      if (!mounted) return;
+
+                      context.read<DriverProfileProvider>().setDriverProfile =
+                          await DriverProfileServices.loadDriverProfileData();
+
+                      if (!mounted) return;
+
+                      if (driverProfileApprovalStatusInSupabase == .approved) {
+                        CherryToast.success(
+                          toastDuration: Duration(seconds: 4),
+                          title: Text(
+                            "Congratulations",
+                            style: TextStyle(
+                              color: AppConstColors.approved,
+                              fontWeight: .bold,
+                            ),
+                          ),
+                          description: Text(
+                            "Your application as a driver has been approved",
+                          ),
+                        ).show(context);
+                      } else {
+                        CherryToast.info(title: Text("response deliverd"))
+                            .show(context);
+                      }
+
+                      return;
+                    }
+
+                    if (!mounted) return;
+
+                    CherryToast.info(
+                      title: Text(
+                        "Still ${driverProfileApprovalStatusInSupabase.name}",
+                      ),
+                    ).show(context);
+                  } catch (e) {
+                    if (!mounted) return;
+
+                    CherryToast.error(
+                      title: Text("error"),
+                      description: Text(
+                        "try again, If the problem persists, restart the application.\n${e.toString()}",
+                      ),
+                      action: Text('restart app'),
+                      actionHandler: () => Phoenix.rebirth(context),
+                    ).show(context);
+                  }
+                },
+                title: 'Check Request Status',
+                fontSize: 16,
+              ),
+
+              AppMainButton(
+                onPressed: () {
+                  CherryToast.error(
+                    toastDuration: Duration(seconds: 8),
+                    title: Text(
+                      "Confirm delete your request",
+                      style: TextTheme.of(context).labelLarge!.copyWith(
+                        color: AppConstColors.primaryText,
+                        fontWeight: .bold,
+                      ),
+                    ),
+                    description: Text(
+                      "Delete your application and all submitted documents? You'll need to reapply to become a driver.",
+                      style: TextTheme.of(context).labelMedium!
+                          .copyWith(color: AppConstColors.secondaryText),
+                    ),
+                    action: Text(
+                      'confirm delete',
+                      style: TextTheme.of(context).labelLarge!.copyWith(
+                        color: AppConstColors.error,
+                        fontWeight: .bold,
+                      ),
+                    ),
+                    actionHandler: () async {
+                      try {
+                        context.read<LoadingProvider>().show();
+                        await DriverProfileServices.deleteRequest();
+
+                        if (!mounted) return;
+
+                        context.read<DriverProfileProvider>().setDriverProfile =
+                            null;
+
+                        if (!mounted) return;
+
+                        CherryToast.success(
+                          title: Text("deleted successfully"),
+                          description: Text('you can now send another one'),
+                        ).show(context);
+                      } catch (e) {
+                        if (!mounted) return;
+
+                        CherryToast.error(
+                          title: Text("error"),
+                          description: Text(e.toString()),
+                          action: Text('try again'),
+                        ).show(context);
+                      } finally {
+                        if (mounted) {
+                          context.read<LoadingProvider>().hide();
+                        }
+                      }
+                    },
+                  ).show(context);
+                },
+                title: 'delete request',
+                mainColor: AppConstColors.error,
+                isOutlined: true,
+                btnHeign: 44,
+                showDecoration: false,
+                icon: Remix.delete_bin_2_line,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRejectedStatusCard({String? rejectedReason}) {
+    const Color primaryColor = AppConstColors.error;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: AppConstColors.shadow.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Remix.file_close_fill, color: primaryColor, size: 24),
+            ),
+            title: Text(
+              'Application Rejected',
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              'Your application needs attention',
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: Colors.grey.shade600),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Unfortunately, your driver application could not be approved.',
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: Colors.grey.shade700, height: 1.5),
+          ),
+
+          const SizedBox(height: 16),
+
+          if (rejectedReason?.trim().isNotEmpty ?? false) ...[
             Text(
               'Reason for rejection',
               style: TextStyle(
@@ -1578,118 +2121,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           ],
 
           const SizedBox(height: 16),
-
-          if (!isApproved)
-            Column(
-              spacing: 8,
-              mainAxisAlignment: .center,
-              crossAxisAlignment: .center,
-              mainAxisSize: .min,
-              children: [
-                if (isUnderReview)
-                  AppMainButton(
-                    btnHeign: 44,
-                    showDecoration: false,
-                    onPressed: () async {
-                      try {
-                        final driverProfileApprovalStatusInProvider = context
-                            .read<DriverProfileProvider>()
-                            .driver!
-                            .approvalStatus;
-                        final driverProfileApprovalStatusInSupabase =
-                            await DriverProfileServices.getDriverApprovalStatus();
-                        if (driverProfileApprovalStatusInSupabase !=
-                            driverProfileApprovalStatusInProvider) {
-                          if (!mounted) return;
-
-                          context
-                                  .read<DriverProfileProvider>()
-                                  .setDriverProfile =
-                              await DriverProfileServices.loadDriverProfileData();
-                          if (!mounted) return;
-                          if (driverProfileApprovalStatusInSupabase ==
-                              .approved) {
-                            CherryToast.success(
-                              toastDuration: Duration(seconds: 4),
-                              title: Text(
-                                "Congratulations",
-                                style: TextStyle(
-                                  color: AppConstColors.approved,
-                                  fontWeight: .bold,
-                                ),
-                              ),
-                              description: Text(
-                                "Your application as a driver has been approved",
-                              ),
-                            ).show(context);
-                          } else {
-                            CherryToast.info(title: Text("response deliverd"))
-                                .show(context);
-                          }
-                          setState(() {});
-                          return;
-                        }
-                        if (!mounted) return;
-                        CherryToast.info(
-                          title: Text(
-                            "Still ${driverProfileApprovalStatusInSupabase.name}",
-                          ),
-                        ).show(context);
-                      } catch (e) {
-                        if (!mounted) return;
-                        CherryToast.error(
-                          title: Text("error"),
-                          description: Text(
-                            "try again, If the problem persists, restart the application.\n${e.toString()}",
-                          ),
-                          action: Text('restart app'),
-                          actionHandler: () => Phoenix.rebirth(context),
-                        ).show(context);
-                      }
-                    },
-
-                    title: 'Check Request Status',
-                    fontSize: 16,
-                  ),
-                AppMainButton(
-                  onPressed: () async {
-                    try {
-                      context.read<LoadingProvider>().show();
-                      await DriverProfileServices.deleteRequest();
-
-                      if (!mounted) return;
-
-                      context.read<DriverProfileProvider>().setDriverProfile =
-                          null;
-                      setState(() {});
-
-                      if (!mounted) return;
-                      CherryToast.success(
-                        title: Text("deleted successfully"),
-                        description: Text('you can now send another one'),
-                      ).show(context);
-                    } catch (e) {
-                      if (!mounted) return;
-                      CherryToast.error(
-                        title: Text("error"),
-                        description: Text(e.toString()),
-                        action: Text('try again'),
-                      ).show(context);
-                    } finally {
-                      if (mounted) {
-                        context.read<LoadingProvider>().hide();
-                      }
-                    }
-                  },
-                  title: 'delete request',
-                  mainColor: AppConstColors.error,
-                  isOutlined: true,
-                  btnHeign: 44,
-                  showDecoration: false,
-                  icon: Remix.delete_bin_2_line,
-                ),
-              ],
-            ),
         ],
       ),
     );

@@ -11,20 +11,19 @@ class AuthProvider extends ChangeNotifier {
 
   // ==================== Account State ====================
   UserMode _currentMode = UserMode.rider;
-    
 
   // ==================== Getters ====================
   UserModel? get user => _user;
   String? get userEmail => _userEmail;
   UserMode get currentUserMode => _currentMode;
-  
+
   // ==================== User Data Operations ====================
   Future<void> loadUser() async {
     _user = await AuthServices.getCurrentUserData();
 
     notifyListeners();
   }
-  
+
   // ==================== Account State Updates ====================
   set setUserEmail(String email) {
     _userEmail = email;
@@ -36,5 +35,4 @@ class AuthProvider extends ChangeNotifier {
     _currentMode = userMode;
     notifyListeners();
   }
-
 }

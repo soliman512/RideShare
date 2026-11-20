@@ -153,7 +153,7 @@ class AuthServices {
   }
 
   //update user image
-  static Future<void> updateUserProfilePicture({
+  static Future<String> updateUserProfilePicture({
     required String userId,
     required XFile newImage,
     required String oldImageUrl,
@@ -193,6 +193,7 @@ class AuthServices {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', userId);
+        return newImageUrl;
   }
 
   //sign out
