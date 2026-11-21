@@ -96,17 +96,19 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               textInputAction: .search,
               // onChanged: onChange,
               // obscureText: obscureText,
-              cursorColor: AppConstColors.subSecondary,
+              cursorColor: AppConstColors.accent,
               style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(color: AppConstColors.primaryText),
               textAlign: .start,
               decoration: InputDecoration(
-                hintText: "ex. New Cairo",
+                // hintText: "ex. New Cairo",
                 labelText: "\t\tSearch\t\t",
                 // prefixIcon: Icon(
                 //   Remix.map_pin_2_fill,
                 //   color: AppConstColors.primaryText,
                 // ),
+                prefixText: 'where?\t',
+
                 suffixIcon: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: IconButton(

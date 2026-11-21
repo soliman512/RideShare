@@ -226,53 +226,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     appVersion = context.read<AppInfoProvider>().appVersion;
   }
 
-  Future<void> showVehicleImagePicker() async {
-    if (carImages.length >= 3) return;
-
-    final ImageSource? source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.camera_alt_outlined),
-                  title: const Text('Camera'),
-                  onTap: () {
-                    Navigator.pop(context, ImageSource.camera);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
-                  title: const Text('Gallery'),
-                  onTap: () {
-                    Navigator.pop(context, ImageSource.gallery);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (source == null) return;
-
-    final XFile? image = await imagePicker.pickImage(
-      source: source,
-      imageQuality: 100,
-    );
-
-    if (image == null || !mounted) return;
-
-    setState(() {
-      carImages.add(image);
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -729,7 +682,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
           const SizedBox(height: 8),
           if (driverProfile?.approvalStatus == .approved)
-            //logout button
+            //delete driver profile button
             AppMainButton(
               onPressed: () => showAppModalSheet(
                 context,
@@ -761,8 +714,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 .read<DriverProfileProvider>()
                                 .setCanBecomeDriver =
                             false;
-                        context.read<AuthProvider>().currentUserMode ==
-                            UserMode.rider;
+                        context.read<AuthProvider>().setMode = UserMode.rider;
 
                         CherryToast.success(
                           inheritThemeColors: true,
@@ -1557,7 +1509,30 @@ class _ProfileScreenState extends State<ProfileScreen>
         // Add image button
         if (index == 0 && carImages.length < 3) {
           return InkWell(
-            onTap: showVehicleImagePicker,
+            onTap: () async {
+              try {
+                context.read<LoadingProvider>().show();
+                if (carImages.length >= 3) return;
+
+                final XFile? image = await imagePicker.pickImage(
+                  source: ImageSource.gallery,
+                  imageQuality: 100,
+                );
+
+                if (image == null || !context.mounted) return;
+
+                setState(() {
+                  carImages.add(image);
+                });
+              } catch (e) {
+                CherryToast.error(
+                  title: Text('error'),
+                  description: Text(e.toString()),
+                ).show(context);
+              } finally {
+                context.read<LoadingProvider>().hide();
+              }
+            },
             borderRadius: BorderRadius.circular(20),
             child: Container(
               decoration: BoxDecoration(
