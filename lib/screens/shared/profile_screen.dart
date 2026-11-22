@@ -744,21 +744,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                     title: 'Yes, Delete',
                     icon: Remix.delete_bin_line,
                     mainColor: AppConstColors.error,
-                    btnHeign: 44,
+                    btnHeight: 44,
                   ),
                   AppMainButton(
                     onPressed: () => Navigator.pop(context),
                     title: 'Cancel',
                     mainColor: AppConstColors.accent,
                     isOutlined: true,
-                    btnHeign: 44,
+                    btnHeight: 44,
                   ),
                 ],
               ),
               title: "delete your driver profile",
               mainColor: AppConstColors.accent,
               showDecoration: false,
-              btnHeign: 44,
+              btnHeight: 44,
               isOutlined: true,
             ),
 
@@ -1659,7 +1659,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 onPressed: onWalletPressed,
                 title: 'My Wallet',
                 mainColor: AppConstColors.accent,
-                btnHeign: 46,
+                btnHeight: 46,
                 isOutlined: true,
                 icon: Remix.wallet_3_line,
               ),
@@ -1892,7 +1892,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             mainAxisSize: .min,
             children: [
               AppMainButton(
-                btnHeign: 44,
+                btnHeight: 44,
                 showDecoration: false,
                 onPressed: () async {
                   try {
@@ -2017,7 +2017,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 title: 'delete request',
                 mainColor: AppConstColors.error,
                 isOutlined: true,
-                btnHeign: 44,
+                btnHeight: 44,
                 showDecoration: false,
                 icon: Remix.delete_bin_2_line,
               ),

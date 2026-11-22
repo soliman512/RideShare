@@ -48,13 +48,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> outCar() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (!mounted) return;
-
     setState(() {
       carPosition = CarPosition.right;
     });
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   @override
@@ -286,7 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                         },
                         showDecoration: false,
-                        btnHeign: 44,
+                        btnHeight: 44,
                         isOutlined: true,
                         title: "I Have the Code",
                         mainColor: AppConstColors.secondary.withValues(

@@ -29,6 +29,10 @@ class AppTextFormField extends StatelessWidget {
     this.mainColor,
     this.filledColor,
     this.isFilled,
+    this.isReadOnly = false,
+    this.isExpands = false,
+    this.minLines,
+    this.maxLines,
   });
   final String? hintText;
   final String? labelText;
@@ -52,6 +56,10 @@ class AppTextFormField extends StatelessWidget {
   final String? outLabel;
   final Color? mainColor;
   final Color? filledColor;
+  final bool isReadOnly;
+  final bool isExpands;
+  final int? minLines;
+  final int? maxLines;
   final List<TextInputFormatter>? inputFormatters;
   @override
   Widget build(BuildContext context) {
@@ -71,6 +79,10 @@ class AppTextFormField extends StatelessWidget {
             ),
           ),
         TextFormField(
+          expands: isExpands,
+          minLines: minLines,
+          maxLines: maxLines,
+          readOnly: isReadOnly,
           controller: controller,
           focusNode: focusNode,
           keyboardType: keyboardType,

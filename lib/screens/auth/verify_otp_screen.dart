@@ -179,7 +179,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                             },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return ' *';
+                                return '';
                               } else {
                                 return null;
                               }
@@ -188,7 +188,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                             keyboardType: .number,
                             maxLength: 1,
                             showCursor: false,
-                            fontSize: 24,
+                            // fontSize: 24,
+
                             fontWeight: .bold,
 
                             textAlign: .center,
@@ -323,8 +324,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                       .read<DriverProfileProvider>()
                                       .setDriverProfile =
                                   driver;
-                //                     context.read<DriverProfileProvider>().setCanBecomeDriver =
-                // driver.approvalStatus == DriverApprovalStatus.approved;
+                              //                     context.read<DriverProfileProvider>().setCanBecomeDriver =
+                              // driver.approvalStatus == DriverApprovalStatus.approved;
                             }
 
                             if (!context.mounted) return;

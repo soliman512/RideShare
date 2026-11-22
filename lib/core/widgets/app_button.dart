@@ -12,7 +12,7 @@ class AppMainButton extends StatelessWidget {
     this.mainColor,
     this.isOutlined = false,
     this.showDecoration = true,
-    this.btnHeign,
+    this.btnHeight,
     this.btnWidth,
     this.fontSize,
   });
@@ -24,7 +24,7 @@ class AppMainButton extends StatelessWidget {
   final bool showDecoration;
   final Color? mainColor;
   final bool isOutlined;
-  final double? btnHeign;
+  final double? btnHeight;
   final double? btnWidth;
   final double? fontSize;
 
@@ -35,9 +35,10 @@ class AppMainButton extends StatelessWidget {
     final Color contentColor = isOutlined ? buttonColor : Colors.white;
 
     return SizedBox(
-      height: btnHeign ?? 52.h,
+      height: btnHeight ?? 52.h,
       width: btnWidth ?? double.infinity,
       child: ElevatedButton(
+        clipBehavior: .antiAlias,
         onPressed: isLoading ? null : onPressed,
 
         style: ElevatedButton.styleFrom(
@@ -57,7 +58,7 @@ class AppMainButton extends StatelessWidget {
               : BorderSide.none,
 
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
 
           // No shadow
@@ -124,8 +125,9 @@ class AppMainButton extends StatelessWidget {
                         color: contentColor,
                         strokeWidth: 2,
                       ),
-                    ),
-                  if (icon != null) Icon(icon, color: contentColor),
+                    )
+                  else if (icon != null)
+                    Icon(icon, color: contentColor),
                   // SizedBox(width: 20),
                 ],
               ),

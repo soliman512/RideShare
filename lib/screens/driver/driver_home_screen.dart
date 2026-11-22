@@ -1,129 +1,135 @@
 import 'package:flutter/material.dart';
-import 'package:remixicon/remixicon.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:ride_share/core/constants/app_const_images.dart';
 import 'package:ride_share/core/constants/app_routes.dart';
-import 'package:ride_share/core/models/ride_model.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/core/widgets/custom_divider.dart';
-import 'package:ride_share/core/widgets/driver_home_ride_card.dart';
+import 'package:ride_share/core/widgets/default_body.dart';
 
-class DriverHomeScreen extends StatelessWidget {
-  const new({super.key});
+class DriverHomeScreen extends StatefulWidget {
+  const DriverHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<RideModel> rides = [];
-
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: .center,
-        crossAxisAlignment: .stretch,
-        spacing: 12,
-        children: [
-          Row(
-            spacing: 6,
-            mainAxisAlignment: .center,
-            crossAxisAlignment: .center,
-            children: [
-              DriverHomeTargetInfoBox(
-                title: "Rating",
-                icon: Remix.star_fill,
-                value: "4.8",
-              ),
-
-              DriverHomeTargetInfoBox(
-                title: "Total Trips",
-                icon: Remix.route_fill,
-                value: "24",
-              ),
-
-              // DriverHomeTargetInfoBox(
-              //   title: "Passengers",
-              //   icon: Remix.group_fill,
-              //   value: "48",
-              // ),
-            ],
-          ),
-          AppMainButton(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.createRideScreen);
-            },
-            title: "Create Ride",
-            icon: Remix.road_map_fill,
-          ),
-          const SizedBox.shrink(),
-          CustomDivider(title: "All Rides"),
-          const SizedBox.shrink(),
-
-          ...List.generate(
-            rides.length,
-            ((index) => RideCardDriverHome(rideData: rides[index])),
-          ),
-        ],
-      ),
-    );
-  }
+  State<DriverHomeScreen> createState() => _DriverHomeScreenState();
 }
 
-class DriverHomeTargetInfoBox extends StatelessWidget {
-  const new({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.value,
-  });
-
-  final String title;
-  final IconData icon;
-  final String value;
-
+class _DriverHomeScreenState extends State<DriverHomeScreen> {
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: .circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: AppConstColors.shadow,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: Border.all(color: AppConstColors.border, width: 1.4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 22, color: AppConstColors.accent),
+    final List rides = [];
 
-            const SizedBox(width: 8),
-
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppConstColors.primaryText,
-                  ),
+    return Column(
+      spacing: 24,
+      children: [
+        if (rides.isNotEmpty) ...[
+          _buildTopBar(context),
+          CustomDivider(title: "Next Rides"),
+        ],
+        Expanded(
+          child: rides.isEmpty
+              ? Column(
+                  mainAxisAlignment: .center,
+                  crossAxisAlignment: .center,
+                  spacing: 36,
+                  children: [
+                    const DefaultBody(
+                      imagePath: AppConstImages.driverHomeCenteralShape,
+                      title: "No Rides Yet",
+                      subtitle: "You haven't created any rides yet. Start by creating your first ride and connect with passengers heading your way.",
+                    ),
+                    // const Spacer(),
+                    AppMainButton(
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.createRideScreen,
+                      ),
+                      // isOutlined: true,
+                      title: 'New Ride',
+                      mainColor: AppConstColors.accent,
+                    ),
+                    // const Spacer(),
+                  ],
+                )
+              : ListView.builder(
+                  itemCount: rides.length,
+                  itemBuilder: (context, index) {
+                    return const SizedBox();
+                  },
                 ),
-
-                const SizedBox(height: 1),
-
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: AppConstColors.secondaryText),
-                ),
-              ],
-            ),
-          ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    return Row(
+      mainAxisAlignment: .spaceEvenly,
+      spacing: 4,
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildTopInfoTile(
+                  context,
+                  leadingIcon: PhosphorIconsFill.star,
+                  title: '2.4',
+                ),
+              ),
+              Expanded(
+                child: _buildTopInfoTile(
+                  context,
+                  leadingIcon: PhosphorIconsFill.car,
+                  title: '14',
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: AppMainButton(
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.createRideScreen),
+            title: 'New Ride',
+            mainColor: AppConstColors.accent,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopInfoTile(
+    BuildContext context, {
+    required IconData leadingIcon,
+    required String title,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        // color: AppConstColors.input,
+        borderRadius: BorderRadius.circular(14),
+        // border: Border.all(
+        //   color: AppConstColors.secondaryText.withValues(alpha: 0.12),
+        // ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PhosphorIcon(leadingIcon, color: AppConstColors.accent, size: 21),
+
+          const SizedBox(width: 8),
+
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextTheme.of(context).labelLarge!.copyWith(
+              color: AppConstColors.accent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,3 @@
-
 abstract class AppConstImages {
   static const String _path = "assets/images";
   static const String appLogo = "$_path/logo/app_logo.png";
@@ -15,10 +14,12 @@ abstract class AppConstImages {
       "$_path/illustration/splash_screen_background.png";
   static const String noInternetConnection =
       "$_path/illustration/no_internet_connection.png";
-  static const String trust =
-      "$_path/illustration/trust.png";
-  static const String oops =
-      "$_path/illustration/oops.png";
+  static const String trust = "$_path/illustration/trust.png";
+  static const String oops = "$_path/illustration/oops.png";
+  static const String driverHomeCenteralShape =
+      "$_path/illustration/driver_home_centeral_shape.png";
+  static const String createNewRide =
+      "$_path/illustration/create_new_ride.png";
 
   // ************************ GIFs **************************
   static const String verifyEmailGif = "$_path/illustration/verify_email.gif";
