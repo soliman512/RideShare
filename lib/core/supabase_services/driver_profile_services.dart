@@ -21,7 +21,7 @@ class DriverProfileServices {
     required String licensePlate,
     List<String>? carImagesUrls,
   }) async {
-    await supabaseClient.from('driver-profiles').insert({
+    await supabaseClient.from('driver_profiles').insert({
       'user_id': userId,
       'id_card_url': idCardUrl,
       'criminal_record_url': criminalRecordUrl,
@@ -42,7 +42,7 @@ class DriverProfileServices {
   //   List<String>? carImages,
   // }) async {
   //   await supabaseClient
-  //       .from('driver-profiles')
+  //       .from('driver_profiles')
   //       .update({
   //         'id_card_url': idCardUrl,
   //         'criminal_record_url': criminalRecordUrl,
@@ -54,7 +54,7 @@ class DriverProfileServices {
 
   static Future<void> deleteRequest() async {
     //delete the row in table
-    await supabaseClient.from('driver-profiles').delete().eq('user_id', userId);
+    await supabaseClient.from('driver_profiles').delete().eq('user_id', userId);
 
     //delete documents (3 images) from driver-documents bucket
     final driverDocuments = await supabaseClient.storage
@@ -84,7 +84,7 @@ class DriverProfileServices {
 
   static Future<DriverProfileModel?> loadDriverProfileData() async {
     final response = await supabaseClient
-        .from('driver-profiles')
+        .from('driver_profiles')
         .select()
         .eq('user_id', userId)
         .maybeSingle();
@@ -97,7 +97,7 @@ class DriverProfileServices {
 
   static Future<DriverApprovalStatus> getDriverApprovalStatus() async {
     final driverProfileStatus = await supabaseClient
-        .from('driver-profiles')
+        .from('driver_profiles')
         .select('approval_status')
         .eq('user_id', userId)
         .maybeSingle();
@@ -112,7 +112,7 @@ class DriverProfileServices {
 
   static Future<bool> isUserHasDriverProfile() async {
     final driverProfile = await supabaseClient
-        .from('driver-profiles')
+        .from('driver_profiles')
         .select('id')
         .eq('user_id', userId)
         .maybeSingle();
