@@ -1,7 +1,6 @@
 import 'package:ride_share/core/constants/app_const_colors.dart';
-import 'package:ride_share/core/models/ride_model.dart';
+import 'package:ride_share/core/extension/ride_status_extension.dart';
 import 'package:flutter/material.dart';
-
 
 class RideStatusFilterChip extends StatelessWidget {
   const RideStatusFilterChip({

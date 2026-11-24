@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:ride_share/core/extension/ride_status_extension.dart';
 import 'package:ride_share/core/models/ride_model.dart';
 import 'package:ride_share/core/widgets/custom_divider.dart';
 import 'package:ride_share/core/widgets/user_avatar.dart';
-
 
 class RideCardMyTrips extends StatefulWidget {
   const RideCardMyTrips({super.key, required this.rideData});
@@ -83,7 +83,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                           ),
                           Flexible(
                             child: Text(
-                              widget.rideData.from,
+                              'widget.rideData.from',
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleSmall!
                                   .copyWith(color: AppConstColors.primaryText),
@@ -110,7 +110,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                           ),
                           Flexible(
                             child: Text(
-                              widget.rideData.destination,
+                              'widget.rideData.destination',
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleSmall!
                                   .copyWith(color: statusColor),
@@ -148,9 +148,8 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                 runSpacing: 8,
                 alignment: WrapAlignment.center,
                 children: [
-                  ...List.generate(widget.rideData.stopPoints.length, (index) {
-                    final isLast =
-                        index == widget.rideData.stopPoints.length - 1;
+                  ...List.generate(10, (index) {
+                    final isLast = index == 10 || index == 9;
 
                     final isFirst = index == 0;
 
@@ -180,7 +179,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                                 ),
 
                               Text(
-                                widget.rideData.stopPoints[index],
+                                'widget.rideData.stopPoints[index]',
                                 style: Theme.of(context).textTheme.labelSmall!
                                     .copyWith(
                                       color: isLast
@@ -224,12 +223,12 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 leading: UserAvatar(
-                  name: widget.rideData.driver.userId,
+                  name: 'widget.rideData.driver.userId',
                   radius: 20,
                   mainColor: statusColor,
                 ),
                 title: Text(
-                  widget.rideData.driver.userId,
+                  'widget.rideData.driver.userId',
                   style: TextTheme.of(context).titleSmall!
                       .copyWith(color: statusColor),
                 ),
@@ -268,7 +267,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                         width: double.infinity,
                         color: AppConstColors.surface,
                         child: Text(
-                          "Model: ${widget.rideData.car.model}",
+                          "Model: ${'widget.rideData.car.model'}",
                           textAlign: .center,
                           style: TextTheme.of(context).bodyMedium!.copyWith(
                             color: AppConstColors.primaryText,
@@ -285,7 +284,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                               width: double.infinity,
                               color: AppConstColors.surface,
                               child: Text(
-                                widget.rideData.car.color,
+                                'widget.rideData.car.color',
                                 textAlign: .center,
                                 style: TextTheme.of(context).bodyMedium!
                                     .copyWith(
@@ -301,7 +300,7 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
                               width: double.infinity,
                               color: AppConstColors.surface,
                               child: Text(
-                                widget.rideData.car.plateNumber,
+                                'widget.rideData.car.plateNumber',
                                 textAlign: .center,
                                 style: TextTheme.of(context).bodyMedium!
                                     .copyWith(
@@ -416,16 +415,16 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
   Color _getStatusColor(RideStatus status) {
     switch (status) {
       case RideStatus.active:
-        return AppConstColors.approved;
+        return AppConstColors.subSecondary;
 
       case RideStatus.cancelled:
         return AppConstColors.error;
 
-      case RideStatus.full:
-        return AppConstColors.accent;
+      case RideStatus.inProgress:
+        return AppConstColors.approved;
 
       case RideStatus.completed:
-        return AppConstColors.subSecondary;
+        return AppConstColors.accent;
     }
   }
 
@@ -437,8 +436,8 @@ class _RideCardMyTripsState extends State<RideCardMyTrips> {
       case RideStatus.cancelled:
         return "CANCELLED";
 
-      case RideStatus.full:
-        return "FULL";
+      case RideStatus.inProgress:
+        return "LIVE";
 
       case RideStatus.completed:
         return "COMPLETED";

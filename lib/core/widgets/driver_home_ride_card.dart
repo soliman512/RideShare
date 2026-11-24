@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:ride_share/core/constants/app_const_colors.dart';
+import 'package:ride_share/core/extension/ride_status_extension.dart';
 import 'package:ride_share/core/models/ride_model.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
-
 
 class RideCardDriverHome extends StatelessWidget {
   const RideCardDriverHome({super.key, required this.rideData});
@@ -21,7 +21,7 @@ class RideCardDriverHome extends StatelessWidget {
     final statusText = _getStatusText(rideData.status);
 
     final seatsProgress = rideData.totalSeats > 0
-        ? (rideData.riders.length / rideData.totalSeats).clamp(0.0, 1.0)
+        ? (50).clamp(0.0, 1.0)
         : 0.0;
 
     return Container(
@@ -53,7 +53,7 @@ class RideCardDriverHome extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            rideData.from,
+                            'rideData.from',
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleSmall!
                                 .copyWith(color: AppConstColors.primaryText),
@@ -66,7 +66,7 @@ class RideCardDriverHome extends StatelessWidget {
                         ),
                         Flexible(
                           child: Text(
-                            rideData.destination,
+                            'rideData.destination',
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleSmall!
                                 .copyWith(color: AppConstColors.subSecondary),
@@ -128,7 +128,7 @@ class RideCardDriverHome extends StatelessWidget {
                   borderRadius: .circular(20),
                   minHeight: 24,
                   color: AppConstColors.subSecondary,
-                  value: seatsProgress,
+                  value: 5,
                 ),
               ),
 
@@ -139,7 +139,7 @@ class RideCardDriverHome extends StatelessWidget {
                   borderRadius: .circular(20),
                 ),
                 child: Text(
-                  "${rideData.riders.length}/${rideData.totalSeats}",
+                  "${'rideData.riders'.length}/${rideData.totalSeats}",
                   style: const TextStyle(
                     color: AppConstColors.subSecondary,
                     fontWeight: .w600,
@@ -168,16 +168,16 @@ class RideCardDriverHome extends StatelessWidget {
   Color _getStatusColor(RideStatus status) {
     switch (status) {
       case RideStatus.active:
-        return AppConstColors.approved;
+        return AppConstColors.subSecondary;
 
       case RideStatus.cancelled:
         return AppConstColors.error;
 
-      case RideStatus.full:
-        return AppConstColors.accent;
+      case RideStatus.inProgress:
+        return AppConstColors.approved;
 
       case RideStatus.completed:
-        return AppConstColors.subSecondary;
+        return AppConstColors.accent;
     }
   }
 
@@ -189,8 +189,8 @@ class RideCardDriverHome extends StatelessWidget {
       case RideStatus.cancelled:
         return "CANCELLED";
 
-      case RideStatus.full:
-        return "FULL";
+      case RideStatus.inProgress:
+        return "LIVE";
 
       case RideStatus.completed:
         return "COMPLETED";

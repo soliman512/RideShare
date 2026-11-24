@@ -76,4 +76,16 @@ class GeoapifyService {
 
     return distanceMeters / 1000;
   }
+
+  Future<double> calculateTotalDistanceInKm(List<LocationModel> points) async {
+    double totalDistance = 0;
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final distance = await calculateDistanceInKm(points[i], points[i + 1]);
+
+      totalDistance += distance;
+    }
+
+    return totalDistance;
+  }
 }

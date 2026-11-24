@@ -10,6 +10,26 @@ import 'package:ride_share/core/widgets/app_text_form_field.dart';
 import 'package:ride_share/core/widgets/app_button.dart';
 import 'package:ride_share/screens/app_scaffold.dart';
 
+enum RideLocationType { departure, destination, pickupPoint }
+
+class LocationSearchField {
+  LocationSearchField({required this.type})
+    : controller = TextEditingController();
+
+  final RideLocationType type;
+  final TextEditingController controller;
+  final ValueNotifier<bool> isSearching = ValueNotifier(false);
+  List<LocationModel> results = [];
+  LocationModel? selectedLocation;
+  int requestId = 0;
+
+  void dispose() {
+    requestId++;
+    controller.dispose();
+    isSearching.dispose();
+  }
+}
+
 class CreateRideScreen extends StatefulWidget {
   const CreateRideScreen({super.key});
 
@@ -18,24 +38,20 @@ class CreateRideScreen extends StatefulWidget {
 }
 
 class _CreateRideScreenState extends State<CreateRideScreen> {
-  //destination
-  List<LocationModel> destinationResults = [];
-  final ValueNotifier<bool> isSearchingDestination = ValueNotifier(false);
-  LocationModel? selectedDestination;
-  //departure
-  List<LocationModel> departureResults = [];
-  final ValueNotifier<bool> isSearchingDeparture = ValueNotifier(false);
-  LocationModel? selectedDeparture;
+  final LocationSearchField departureField = LocationSearchField(
+    type: RideLocationType.departure,
+  );
+  final LocationSearchField destinationField = LocationSearchField(
+    type: RideLocationType.destination,
+  );
 
   final GeoapifyService _geoapifyService = GeoapifyService();
-  final TextEditingController destinationController = TextEditingController();
-  final TextEditingController departureController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
   final ValueNotifier<int> availableSeats = ValueNotifier<int>(3);
 
-  final ValueNotifier<List<TextEditingController>> pickupPoints = ValueNotifier(
-    [TextEditingController()],
-  );
+  final ValueNotifier<List<LocationSearchField>> pickupPoints = ValueNotifier([
+    LocationSearchField(type: RideLocationType.pickupPoint),
+  ]);
 
   DateTime? departureDate;
   TimeOfDay? departureTime;
@@ -47,21 +63,16 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
     super.initState();
 
     pickupPoints.addListener(validateFields);
-    for (final controller in pickupPoints.value) {
-      controller.addListener(validateFields);
-    }
   }
 
   @override
   void dispose() {
-    destinationController.dispose();
-    departureController.dispose();
+    departureField.dispose();
+    destinationField.dispose();
     notesController.dispose();
     availableSeats.dispose();
-    isSearchingDestination.dispose();
-    isSearchingDeparture.dispose();
-    for (final controller in pickupPoints.value) {
-      controller.dispose();
+    for (final field in pickupPoints.value) {
+      field.dispose();
     }
 
     pickupPoints.dispose();
@@ -93,17 +104,21 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
   }
 
   void _addPickupPoint() {
-    pickupPoints.value = [...pickupPoints.value, TextEditingController()];
+    pickupPoints.value = [
+      ...pickupPoints.value,
+      LocationSearchField(type: RideLocationType.pickupPoint),
+    ];
   }
 
   void _removePickupPoint(int index) {
     if (pickupPoints.value.length <= 1) return;
 
     final updatedPoints = [...pickupPoints.value];
-    final removedController = updatedPoints.removeAt(index);
+    final removedField = updatedPoints.removeAt(index);
 
     pickupPoints.value = updatedPoints;
-    removedController.dispose();
+    removedField.dispose();
+    setState(() {});
   }
 
   String get formattedDate {
@@ -126,123 +141,84 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
 
   void validateFields() {
     isRequiredFieldNotEmpty.value =
-        selectedDestination != null &&
-        selectedDeparture != null &&
-        pickupPoints.value.every((element) => element.text.isNotEmpty) &&
+        departureField.selectedLocation != null &&
+        destinationField.selectedLocation != null &&
+        pickupPoints.value.every((field) => field.selectedLocation != null) &&
         totalSeats > 0 &&
         departureDate != null &&
         departureTime != null;
   }
 
-  int _searchDestinationRequestId = 0;
+  Future<void> _onLocationChanged(
+    LocationSearchField field,
+    String value,
+  ) async {
+    final requestId = ++field.requestId;
+    field.selectedLocation = null;
 
-  Future<void> _onDestinationChanged(String value) async {
-    final requestId = ++_searchDestinationRequestId;
-    if (value.isEmpty) {
-      setState(() {
-        selectedDestination = null;
-        destinationResults = [];
-      });
-      return;
-    }
     if (value.trim().length < 2) {
-      destinationResults = [];
-      selectedDestination = null;
-      isSearchingDestination.value = false;
+      setState(() {
+        field.results = [];
+      });
+      field.isSearching.value = false;
       validateFields();
       return;
     }
 
-    isSearchingDestination.value = true;
-    selectedDestination = null;
-
+    setState(() {
+      field.results = [];
+    });
+    field.isSearching.value = true;
     validateFields();
 
     try {
       final results = await _geoapifyService.searchLocation(value);
 
-      if (!mounted || requestId != _searchDestinationRequestId) return;
+      if (!mounted || requestId != field.requestId) return;
       setState(() {
-        destinationResults = results;
+        field.results = results;
       });
     } catch (e) {
-      if (!mounted || requestId != _searchDestinationRequestId) return;
+      if (!mounted || requestId != field.requestId) return;
 
       CherryToast.error(
         title: const Text('Search Failed'),
         description: const Text('Unable to fetch locations. Please try again.'),
       ).show(context);
     } finally {
-      if (mounted && requestId == _searchDestinationRequestId) {
-        isSearchingDestination.value = false;
+      if (mounted && requestId == field.requestId) {
+        field.isSearching.value = false;
       }
     }
   }
 
-  void _onDestinationSelected(LocationModel location) {
+  void _onLocationSelected(LocationSearchField field, LocationModel location) {
+    field.requestId++;
     setState(() {
-      selectedDestination = location;
-      destinationController.text = location.address;
-      destinationResults = [];
+      field.selectedLocation = location;
+      field.controller.text = location.address;
+      field.results = [];
     });
+    field.isSearching.value = false;
 
     validateFields();
   }
 
-  // start point (departureResults)
-  int _searchDepartureRequestId = 0;
-
-  Future<void> _onDepartureChanged(String value) async {
-    final requestId = ++_searchDepartureRequestId;
-    if (value.isEmpty) {
-      setState(() {
-        selectedDeparture = null;
-        departureResults = [];
-      });
-      return;
-    }
-    if (value.trim().length < 2) {
-      departureResults = [];
-      selectedDeparture = null;
-      isSearchingDeparture.value = false;
-      validateFields();
-      return;
+  Future<double> getFullTrackedDistanceInKm() async {
+    if (departureField.selectedLocation == null ||
+        destinationField.selectedLocation == null) {
+      return 0;
     }
 
-    isSearchingDeparture.value = true;
-    selectedDeparture = null;
+    final routePoints = [
+      departureField.selectedLocation!,
+      ...pickupPoints.value
+          .where((element) => element.selectedLocation != null)
+          .map((element) => element.selectedLocation!),
+      destinationField.selectedLocation!,
+    ];
 
-    validateFields();
-
-    try {
-      final results = await _geoapifyService.searchLocation(value);
-
-      if (!mounted || requestId != _searchDepartureRequestId) return;
-      setState(() {
-        departureResults = results;
-      });
-    } catch (e) {
-      if (!mounted || requestId != _searchDepartureRequestId) return;
-
-      CherryToast.error(
-        title: const Text('Search Failed'),
-        description: const Text('Unable to fetch locations. Please try again.'),
-      ).show(context);
-    } finally {
-      if (mounted && requestId == _searchDepartureRequestId) {
-        isSearchingDeparture.value = false;
-      }
-    }
-  }
-
-  void _onDepartureSelected(LocationModel location) {
-    setState(() {
-      selectedDeparture = location;
-      departureController.text = location.address;
-      departureResults = [];
-    });
-
-    validateFields();
+    return await _geoapifyService.calculateTotalDistanceInKm(routePoints);
   }
 
   @override
@@ -258,110 +234,35 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
 
             const SizedBox(height: 36),
             // Form Content
-            _buildSectionTitle('Destination', Icons.location_on_rounded),
-
-            ValueListenableBuilder<bool>(
-              valueListenable: isSearchingDestination,
-              builder: (context, isSearching, child) {
-                return AppTextFormField(
-                  controller: destinationController,
-                  hintText: 'Enter destination',
-                  onChange: (value) => _onDestinationChanged(value),
-                  inputAction: .search,
-                  textAlign: .center,
-                  suffixIcon: isSearching
-                      ? Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppConstColors.secondaryText,
-                            ),
-                          ),
-                        )
-                      : selectedDestination != null
-                      ? PhosphorIcon(
-                          PhosphorIconsBold.check,
-                          color: AppConstColors.subSecondary,
-                        )
-                      : destinationController.text.isNotEmpty
-                      ? PhosphorIcon(
-                          PhosphorIconsBold.question,
-                          color: AppConstColors.accent,
-                        )
-                      : null,
-                );
-              },
-            ),
-
-            //search result
-            if (destinationResults.isNotEmpty)
-              _showSearchLocationResults(
-                context,
-                results: destinationResults,
-                isDestination: true,
-              ),
-            const SizedBox(height: 24),
-
             ///////////////////////////////////////////////////////
             // departure:
-            _buildSectionTitle('Departure', Icons.location_on_rounded),
-
-            ValueListenableBuilder<bool>(
-              valueListenable: isSearchingDeparture,
-              builder: (context, isSearching, child) {
-                return AppTextFormField(
-                  controller: departureController,
-                  hintText: 'Enter departure point',
-                  onChange: (value) => _onDepartureChanged(value),
-                  inputAction: .search,
-                  textAlign: .center,
-                  suffixIcon: isSearching
-                      ? Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppConstColors.secondaryText,
-                            ),
-                          ),
-                        )
-                      : selectedDeparture != null
-                      ? PhosphorIcon(
-                          PhosphorIconsBold.check,
-                          color: AppConstColors.subSecondary,
-                        )
-                      : departureController.text.isNotEmpty
-                      ? PhosphorIcon(
-                          PhosphorIconsBold.question,
-                          color: AppConstColors.accent,
-                        )
-                      : null,
-                );
-              },
+            _buildSectionTitle(
+              'From (first pickup point)',
+              PhosphorIconsFill.mapPinLine,
             ),
 
-            //search result
-            if (departureResults.isNotEmpty)
-              _showSearchLocationResults(
-                context,
-                results: departureResults,
-                isDestination: false,
-              ),
+            _buildLocationField(
+              field: departureField,
+              hintText: 'Enter departure point',
+            ),
             const SizedBox(height: 24),
+            ////////////////////////////////////
+            /// destinaction(to)
 
-            if (selectedDestination != null && selectedDeparture != null) ...[
+            _buildSectionTitle('To', PhosphorIconsFill.flag),
+
+            _buildLocationField(
+              field: destinationField,
+              hintText: 'Enter destination',
+            ),
+            const SizedBox(height: 24),
+            // earning and distance in km
+            if (destinationField.selectedLocation != null &&
+                departureField.selectedLocation != null) ...[
               const SizedBox(height: 12),
 
               FutureBuilder(
-                future: _geoapifyService.calculateDistanceInKm(
-                  selectedDeparture!,
-                  selectedDestination!,
-                ),
+                future: getFullTrackedDistanceInKm(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: const CircularProgressIndicator());
@@ -377,8 +278,8 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
                     final driverEarning = grossEarning - platformFees;
                     return ListenableBuilder(
                       listenable: Listenable.merge([
-                        destinationController,
-                        departureController,
+                        destinationField.controller,
+                        departureField.controller,
                       ]),
                       builder: (context, child) {
                         return AnimatedSwitcher(
@@ -448,9 +349,16 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            _buildSectionTitle('Stop Points', Icons.location_on_rounded),
-
-            ValueListenableBuilder<List<TextEditingController>>(
+            _buildSectionTitle('Stop Points', PhosphorIconsFill.mapTrifold),
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0),
+              child: Text(
+                'Add stops along your route. Other passengers can join your ride from these locations.',
+                style: TextTheme.of(context).labelSmall!
+                    .copyWith(color: AppConstColors.secondaryText),
+              ),
+            ),
+            ValueListenableBuilder<List<LocationSearchField>>(
               valueListenable: pickupPoints,
               builder: (context, points, _) {
                 return Column(
@@ -476,24 +384,25 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
                             ],
                           ),
                           Expanded(
-                            child: AppTextFormField(
-                              controller: points[index],
-                              outLabel: ' ',
-                              hintText: index == 0
-                                  ? 'Starting point'
-                                  : 'Pickup point',
-                              inputAction: TextInputAction.next,
-                              suffixIcon: points.length > 1
-                                  ? IconButton(
-                                      onPressed: () =>
-                                          _removePickupPoint(index),
-                                      icon: const Icon(
-                                        Icons.close_rounded,
-                                        color: AppConstColors.secondaryText,
-                                        size: 22,
-                                      ),
-                                    )
-                                  : null,
+                            child: Row(
+                              spacing: 12,
+                              children: [
+                                Expanded(
+                                  child: _buildLocationField(
+                                    field: points[index],
+                                    hintText: 'Pickup point',
+                                  ),
+                                ),
+                                if (points.length > 1)
+                                  IconButton(
+                                    onPressed: () => _removePickupPoint(index),
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      color: AppConstColors.secondaryText,
+                                      size: 22,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
@@ -637,10 +546,56 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
     );
   }
 
+  Widget _buildLocationField({
+    required LocationSearchField field,
+    required String hintText,
+  }) {
+    return Column(
+      children: [
+        ValueListenableBuilder<bool>(
+          valueListenable: field.isSearching,
+          builder: (context, isSearching, child) {
+            return AppTextFormField(
+              controller: field.controller,
+              hintText: hintText,
+              onChange: (value) => _onLocationChanged(field, value),
+              inputAction: .search,
+              textAlign: .center,
+              suffixIcon: isSearching
+                  ? Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppConstColors.secondaryText,
+                        ),
+                      ),
+                    )
+                  : field.selectedLocation != null
+                  ? PhosphorIcon(
+                      PhosphorIconsBold.check,
+                      color: AppConstColors.subSecondary,
+                    )
+                  : field.controller.text.isNotEmpty
+                  ? PhosphorIcon(
+                      PhosphorIconsBold.question,
+                      color: AppConstColors.accent,
+                    )
+                  : null,
+            );
+          },
+        ),
+        if (field.results.isNotEmpty)
+          _showSearchLocationResults(context, field: field),
+      ],
+    );
+  }
+
   Container _showSearchLocationResults(
     BuildContext context, {
-    required List<LocationModel> results,
-    required isDestination,
+    required LocationSearchField field,
   }) {
     return Container(
       constraints: BoxConstraints(maxHeight: context.screenHeight * .3),
@@ -655,22 +610,21 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
       child: SingleChildScrollView(
         child: Column(
           children: List.generate(
-            results.length,
+            field.results.length,
             (index) => Material(
               child: Column(
                 mainAxisSize: .min,
                 children: [
                   ListTile(
-                    onTap: () => isDestination
-                        ? _onDestinationSelected(results[index])
-                        : _onDepartureSelected(results[index]),
+                    onTap: () =>
+                        _onLocationSelected(field, field.results[index]),
                     leading: PhosphorIcon(
                       PhosphorIconsLight.mapPin,
                       color: AppConstColors.subSecondary,
                     ),
-                    title: Text(results[index].address.toString()),
+                    title: Text(field.results[index].address.toString()),
                   ),
-                  if (index != results.length - 1)
+                  if (index != field.results.length - 1)
                     Divider(
                       color: AppConstColors.secondary.withValues(alpha: .3),
                       thickness: .4,
