@@ -1,280 +1,165 @@
-# ride_share 🚗
+# RideShare
 
-**Share the ride. Split the cost.**
+**Better Rides. Together.**
 
-A carpool platform connecting drivers and riders on shared routes in Cairo, Egypt. Riders board along a driver's route and pay a distance-based fare; the platform takes a 10% commission on every ride.
+A carpooling app that connects drivers and riders heading the same way. Drivers publish rides with pickup points along their route, riders join from the point that suits them, and fares are split by distance — making daily travel cheaper and more social.
 
-Built with **Flutter** (frontend) and **Supabase** (backend: PostgreSQL + PostGIS + Auth + Storage).
+Built with Flutter and Supabase.
 
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Pricing Model](#pricing-model)
-- [Database Schema](#database-schema)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Approving a Driver (Admin)](#approving-a-driver-admin)
-- [Roadmap](#roadmap)
-- [Known Issues](#known-issues)
+![Flutter](https://img.shields.io/badge/Flutter-%E2%89%A5%203.47.4-02569B?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-%5E3.13.3-0175C2?logo=dart)
+![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?logo=supabase)
+![Platforms](https://img.shields.io/badge/Platforms-Android%20%C2%B7%20iOS%20%C2%B7%20Web%20%C2%B7%20Desktop-lightgrey)
 
 ---
 
-## Overview
+## Features
 
-Daily commuters in Cairo spend significant money on fuel, tolls, and car maintenance, while public transport is often overcrowded or unavailable for specific routes. ride_share lets drivers offer seats on their daily commute and split the cost with riders traveling along the same route, using real road-distance fare splitting rather than flat pricing.
+### Authentication & Profiles
+- Passwordless sign-in with a 6-digit email OTP (Supabase Auth)
+- Profile setup with name, Egyptian phone-number validation, and a profile photo
+- Photos are compressed client-side (WebP, capped at 300 KB) before upload
+- Edit profile, change or remove avatar, sign out
 
-## Key Features
+### Driver Verification
+- In-app application to become a driver: vehicle type, model, color, and license plate (supports Arabic-Indic numerals)
+- Secure document upload: national ID, criminal record, driving license, and up to 3 vehicle photos
+- Approval workflow with `under_review` / `approved` / `rejected` statuses tracked in the database
+- Approved drivers can delete their application, which also cleans up stored documents
 
-- **Distance-based fare splitting** — riders farther from the destination pay more, closer riders pay less; all individual fares always sum exactly to the total ride price.
-- **One pickup stop = one seat** — each stop becomes unavailable once booked, and available again if the booking is cancelled.
-- **Real road distances** — via the Geoapify Routing API, not straight-line estimates (with a straight-line × 1.3 fallback if the API call fails).
-- **Driver identity verification** — National ID card + criminal record clearance required before a driver is approved.
-- **Single account, dual role** — every user can toggle between Rider mode and Driver mode.
-- **Address autocomplete** — Geoapify-powered, Egypt-biased search for all location inputs.
-- **Passwordless auth** — email OTP via Supabase Auth.
+### Ride Creation (Driver Mode)
+- Place search with autocomplete, localized to Egypt (Geoapify)
+- Multi-stop routes: departure, destination, and unlimited pickup points along the way
+- Real driving-distance calculation across the full route (Geoapify Routing)
+- Live earnings preview: 5 EGP per km, minus a 10% platform fee
+- Date & time pickers, available-seats selector, and driver notes
+
+### Rider Experience
+- Rider/Driver mode switch in the app bar (Driver mode unlocks after approval)
+- Home screen with time-aware greeting and destination search
+- Trips screen with status filters (active, completed, cancelled) and pull-to-refresh
+- Notifications screen with swipe-to-dismiss
+- Offline detection with a dedicated no-connection screen and retry
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Frontend | Flutter 3.x (Dart) — single codebase for iOS & Android |
-| Backend | Supabase — PostgreSQL + PostGIS + Auth + Storage |
-| Authentication | Supabase Auth — Email OTP (passwordless) |
-| Address Search | Geoapify Autocomplete API |
-| Road Distances | Geoapify Routing API |
-| GPS Location | `geolocator` package |
-| State Management | Provider (`ChangeNotifier`, one provider per feature/domain) |
-| OTP Delivery | Custom SMTP via Resend.com (recommended for production) |
-| File Upload | Supabase Storage — `driver-documents` bucket |
+| --- | --- |
+| Framework | Flutter (≥ 3.47.4) |
+| Language | Dart ^3.13.3 (uses Dart 3.13 primary-constructor syntax) |
+| Backend | Supabase — Auth, Postgres, Storage |
+| Maps & Geo | Geoapify — Autocomplete + Routing APIs |
+| State Management | Provider + `ValueNotifier` |
+| Key packages | `supabase_flutter`, `http`, `image_picker`, `flutter_image_compress`, `permission_handler`, `internet_connection_checker_plus`, `easy_localization`, `intl`, `timeago`, `google_fonts`, `remixicon`, `phosphor_icons`, `circle_nav_bar`, `cherry_toast`, `flutter_screenutil`, `shared_preferences`, `package_info_plus`, `device_info_plus`, `flutter_phoenix` |
 
-**Key Flutter packages:** `supabase_flutter`, `provider`, `geolocator`, `http`, `image_picker`, `google_fonts`, `flutter_secure_storage`, `intl`.
-
-## Architecture
-
-```
-Flutter App (Frontend)  <──REST + WS──>  Supabase (Backend)  <──>  PostgreSQL + PostGIS
-        │                                       │
-        │                                       ├── Auth (Email OTP)
-        │                                       ├── RPC Functions (search_rides, book_ride, ...)
-        │                                       └── Storage (driver-documents)
-        │
-        ├──> Geoapify (Autocomplete + Routing)
-        └──> Device GPS
-```
-
-The app is organized in layers (not feature-first / not full Clean Architecture — chosen for the current project size):
-
-- **Presentation** — `screens/`, `widgets/`
-- **State** — `providers/` (one `ChangeNotifier` per domain: `AuthProvider`, and later `RideSearchProvider`, `DriverRidesProvider`)
-- **Data** — `services/` (stateless: `SupabaseService`, `LocationService`)
-- **Domain models** — `models/` (one file per model)
-
-## Pricing Model
-
-Constants are hardcoded in the app and never shown to users:
-
-```
-PRICE_PER_KM        = 5.0 EGP
-PLATFORM_COMMISSION = 10%
-DRIVER_SHARE         = 90%
-```
-
-**Total ride value:**
-
-```
-total_route_km  = road distance from the FURTHEST pickup stop to the destination
-total_price     = total_route_km × PRICE_PER_KM
-driver_earns    = total_price × 0.90
-platform_earns  = total_price × 0.10
-```
-
-**Per-rider fare (proportional split):**
-
-```
-sum_ratios = Σ (stop_km / total_route_km)  for all stops
-my_fare    = total_price × (my_stop_km / total_route_km) / sum_ratios
-```
-
-Prices are fixed once a ride is created — they do not change as riders book or cancel.
-
-<details>
-<summary>Worked example (61 km route, 3 stops)</summary>
-
-| Item | Calculation | Result |
-|---|---|---|
-| Total price | 61 × 5 EGP | 305.00 EGP |
-| Driver earns | 305 × 90% | 274.50 EGP |
-| Platform earns | 305 × 10% | 30.50 EGP |
-| sum_ratios | (61+50+45)/61 | 2.557 |
-| Rider 1 fare (61 km) | 305 × (61/61) / 2.557 | 119.28 EGP |
-| Rider 2 fare (50 km) | 305 × (50/61) / 2.557 | 97.77 EGP |
-| Rider 3 fare (45 km) | 305 × (45/61) / 2.557 | 87.95 EGP |
-| **Total collected** | | **305.00 EGP** ✓ |
-
-</details>
-
-## Database Schema
-
-PostgreSQL on Supabase with the **PostGIS** extension enabled for GPS proximity queries, and **RLS** policies so users can only access their own data.
+### Backend schema (Supabase)
 
 | Table | Purpose |
-|---|---|
-| `users` | Core profile: name, email, phone, `current_mode` (rider/driver), rating |
-| `driver_profiles` | Verification docs, approval status, driver rating |
-| `vehicles` | Plate, make, model, color, year, linked to a driver |
-| `rides` | Destination, departure time, seats, `total_route_km`, status |
-| `pickup_points` | One row per stop; ordered, with distance to destination |
-| `bookings` | A rider's reservation of a specific pickup point on a ride |
-| `reviews` | Post-ride ratings between driver and rider |
-| `notifications` | In-app notifications (booking confirmed, ride cancelled, etc.) |
+| --- | --- |
+| `users` | Public profiles: full name, email, phone, avatar URL, rating |
+| `driver_profiles` | Driver applications: document URLs, vehicle info, approval status, rating, ride count |
 
-**Key RPC functions:** `search_rides`, `book_ride`, `cancel_booking`, `complete_ride`, `cancel_ride`, `get_ride_details`, `get_rider_bookings`, `get_driver_rides`, `switch_mode`, `register_driver`, `mark_notifications_read`.
+| Storage bucket | Contents |
+| --- | --- |
+| `profile-pictures` | User avatars (WebP) |
+| `driver-documents` | ID card, criminal record, driving license |
+| `car-images` | Vehicle photos |
+
+---
 
 ## Project Structure
 
 ```
-ride_share_flutter/
-  lib/
-    main.dart
-    constants/
-      app_constants.dart
-      api_constants.dart
-      app_routes.dart
-    theme/
-      app_theme.dart
-    routing/
-      app_router.dart
-    providers/
-      auth_provider.dart
-    models/
-      user_model.dart
-      driver_profile_model.dart
-      vehicle_model.dart
-      ride_model.dart
-      pickup_point_model.dart
-      booking_model.dart
-      review_model.dart
-      notification_model.dart
-    services/
-      supabase_service.dart
-      location_service.dart
-    widgets/
-      app_button.dart
-      app_text_field.dart
-      app_card.dart
-      user_avatar.dart
-      status_chip.dart
-      empty_state.dart
-      address_search_field.dart
-    screens/
-      main_scaffold.dart
-      auth/
-        login_screen.dart
-        verify_otp_screen.dart
-        profile_setup_screen.dart
-      rider/
-        rider_home_screen.dart
-        ride_detail_screen.dart
-        my_trips_screen.dart
-      driver/
-        driver_home_screen.dart
-        create_ride_screen.dart
-      shared/
-        profile_screen.dart
-        notifications_screen.dart
-  assets/
-    images/
-    fonts/
-  .env
-  .gitignore
-  pubspec.yaml
+lib/
+├── main.dart                      # App entry point
+├── core/
+│   ├── constants/                 # Colors, image paths, route names, storage keys
+│   ├── data/                      # ID generation, mock data
+│   ├── extension/                 # BuildContext & enum helpers (screen size, keyboard, statuses)
+│   ├── models/                    # User, Ride, RidePoint, DriverProfile, Vehicle, Location, Notification
+│   ├── providers/                 # Auth, driver profile, loading, network, app info, current page
+│   ├── services/                  # Geoapify, permissions, image compression, driver storage
+│   ├── supabase_services/         # Auth, ride, and driver-profile database services
+│   ├── theme/                     # App-wide ThemeData
+│   ├── urils/                     # Date formatting
+│   └── widgets/                   # Reusable UI (buttons, text fields, app bar, cards, sheets)
+└── screens/
+    ├── splash/                    # Splash with session-based routing
+    ├── auth/                      # Login, OTP verification, profile setup
+    ├── rider/                     # Rider home, my trips, ride details
+    ├── driver/                    # Driver home, create ride
+    └── shared/                    # Profile, notifications, loading, error, no-internet
 ```
 
-> API keys and secrets (Supabase URL, Geoapify key) are **not** hardcoded — they're loaded via `--dart-define` or `flutter_dotenv` with `.env` excluded from version control.
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- Flutter 3.x
-- Xcode (for iOS builds)
-- Android Studio (for Android builds)
-- A Supabase project with PostGIS enabled
+- **Flutter 3.47.4 or newer** (Dart 3.13.3+). The codebase uses Dart 3.13 primary constructors, so older Flutter versions will not build it.
+- A [Supabase](https://supabase.com) project
+- A [Geoapify](https://www.geoapify.com) API key
 
 ### Setup
 
-```bash
-git clone <this-repo-url>
-cd ride_share_flutter
-flutter pub get
-```
+1. **Clone the repository**
 
-### Run
+   ```bash
+   git clone https://github.com/soliman512/RideShare.git
+   cd RideShare
+   ```
 
-```bash
-flutter run              # auto-detects connected device
-flutter run -d chrome    # quick testing in the browser
-```
+2. **Install dependencies**
 
-## Environment Variables
+   ```bash
+   flutter pub get
+   ```
 
-Create a `.env` file at the project root (kept out of version control):
+3. **Configure Supabase**
 
-```
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-GEOAPIFY_API_KEY=your_geoapify_api_key
-```
+   In your Supabase project:
 
-## Approving a Driver (Admin)
+   - Enable **Email OTP** under Authentication → Providers
+   - Create the `users` and `driver_profiles` tables (see schema above)
+   - Create the storage buckets `profile-pictures`, `driver-documents`, and `car-images`
+   - Enable Row Level Security with appropriate policies
 
-There is currently no admin UI — approvals are done manually via the Supabase SQL Editor:
+4. **Provide your credentials**
 
-```sql
-UPDATE public.driver_profiles
-SET approval_status = 'approved', approved_at = NOW()
-WHERE approval_status = 'under_review';
-```
+   Add your Supabase URL, Supabase anon key, and Geoapify API key where the app expects them, and never commit real keys to git. The recommended approach is `--dart-define`:
 
-## Roadmap
+   ```bash
+   flutter run \
+     --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+     --dart-define=SUPABASE_ANON_KEY=your-anon-key \
+     --dart-define=GEOAPIFY_API_KEY=your-geoapify-key
+   ```
 
-**High priority**
-- [ ] Payment gateway (Fawry / Paymob) for real EGP payments
-- [ ] Push notifications via Firebase Cloud Messaging
-- [ ] Admin dashboard (web) for driver approvals, ride management, analytics
-- [ ] Post-ride reviews UI (schema already exists)
-- [ ] Map view for pickup stops in Ride Detail
+   > The Supabase **anon** key is safe to ship in a client app when Row Level Security is enabled. The **service-role** key must never be included in the app or the repository.
 
-**Medium priority**
-- [ ] In-app chat (driver ↔ passenger) via Supabase Realtime
-- [ ] Live ride tracking on map
-- [ ] Recurring rides (daily/weekly schedules)
-- [ ] Shareable deep links for rides
-- [ ] Arabic language support (RTL)
-- [ ] Ride search history
+5. **Run**
 
-**Infrastructure**
-- [ ] Configure Resend.com SMTP in Supabase to remove the free-tier 3/hour OTP limit
-- [ ] Tighten RLS policies before production launch
-- [ ] Enable Supabase Realtime on the `bookings` table
-- [ ] Server-side pricing validation via Supabase Edge Functions
-
-## Known Issues
-
-| Issue | Fix |
-|---|---|
-| OTP limited to 3/hour on Supabase free tier | Configure custom SMTP via Resend.com under Supabase → Auth → SMTP |
-| `search_rides` RPC needs an update | Run `search_rides_fix.sql` in the Supabase SQL Editor to enable pickup-point-based search |
-| iOS requires code signing | Open `ios/Runner.xcworkspace` in Xcode and add an Apple ID under Signing & Capabilities |
-| GPS permission denied | Falls back to Cairo center (30.0444, 31.2357) |
-| Geoapify free tier: 3,000 requests/day | Upgrade the plan for production, or cache frequent queries |
+   ```bash
+   flutter run
+   ```
 
 ---
 
-*Confidential — internal project documentation.*
+## Roadmap
+
+- [ ] Persist created rides to the database (rides + stop points)
+- [ ] Ride search and seat booking for riders
+- [ ] Ride details screen with driver, vehicle, and stop information
+- [ ] Trip lifecycle management (in progress, completed, cancelled)
+- [ ] Real-time notifications backed by the database
+- [ ] Driver and rider ratings
+- [ ] Arabic localization (`easy_localization` is already integrated)
+
+---
+
+## License
+
+No license has been specified yet. All rights reserved by the repository owner until one is chosen.
